@@ -1,0 +1,121 @@
+/* 此文件用于更新服务的样式 */
+body {
+    font-size: 16px;
+}
+
+.main_content {
+    padding: 10px 50px;
+}
+
+
+
+.upd_item_grp {
+    margin-top: 10px;
+}
+
+.upd_title {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 80px;
+    text-align: right;
+}
+
+.upd_item_right {
+    margin-left: 100px;
+}
+
+.upd_margin_top {
+    margin-top: 10px;
+}
+
+.version_time .upd_title {
+    display: block;
+}
+
+.upd_item {
+    display: inline-block;
+
+    margin-left: 20px;
+}
+
+
+.upd_btn {
+    border: 1px solid #999;
+    padding: 0px 5px;
+    cursor: pointer;
+    height: 27px;
+    /* line-height: 27px; */
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+
+.upd_btn:hover {
+    border-color: #10c910;
+    border-color: #409eff;
+}
+
+
+#upd_version .upd_btn {
+    margin-left: 10px;
+}
+
+#upd_modlue {
+    display: flex;
+    /* flex-direction: column; */
+}
+
+#modlue_text {}
+
+
+
+.border_style {
+    border: 1px solid #999;
+    border-radius: 0px;
+    box-sizing: border-box;
+}
+
+
+
+/* 覆盖标签样式 */
+.item_select,
+select {
+    width: 20%;
+    min-width: 170px;
+    height: 27px;
+    border-radius: 0px;
+}
+
+textarea {
+    font-size: 14px;
+    padding: 5px;
+    outline: none;
+}
+
+.form {
+    border: 1px solid;
+    width: 425px;
+    min-width: 425px;
+}
+
+.icon-shanglajiantou {
+    background-image: URL("../images/icon_up_down.png");
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translate(0px, -50%);
+}
+
+#btn_submit {
+    text-align: center;
+    margin: 10px;
+    margin-top: 50px;
+}
+
+#btn_submit .upd_btn {
+    width: 100%;
+    padding: 5px 10px;
+    height: auto;
+}

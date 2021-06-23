@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摩西尔LED显示控制-更新</title>
+
+
+    <link rel="Shortcut Icon" href="./images/logo.png" id="theme_logo">
+    <link rel="stylesheet" href="./styles/cmzInput.css" />
+    <link rel="stylesheet" href="./styles/page_index.css" id="theme_page" />
+
+</head>
+
+<body>
+    <div id="page_container" class="page_update">
+        <div class="main_content">
+            <!-- modlue_name 表示模块名称 唯一性 -->
+            <div class="form" style="" modlue_name=''>
+                <!-- nodlue -->
+                <div id="upd_modlue" class="upd_item_grp">
+                    <div class="upd_title"> 模块</div>
+                    <div class="upd_item" style="display: inline-flex;">
+                        <div id='upd_select_modlue' class="item_select"></div>
+                    </div>
+                </div>
+                <textarea id="modlue_text" class="upd_block border_style upd_item_right" style="display: block;margin-top: 10px;">描述信息</textarea>
+
+                <!-- version -->
+                <div id="upd_version" class="upd_item_grp">
+                    <div style="display: inline-flex;">
+                        <div class="upd_title">版本号</div>
+                        <div class="upd_item">
+                            <div id='upd_select_version' class="item_select"></div>
+                        </div>
+                        <div class="upd_btn">创建</div>
+                        <div class="upd_btn">刷新</div>
+                    </div>
+
+                    <div class="version_time">
+                        <div id="version_create_time" class="upd_title upd_margin_top">创建时间
+                            <span class="time_val"></span>
+                        </div>
+                        <div id="version_edit_time" class="upd_title upd_margin_top">修改时间
+                            <span class="time_val"></span>
+                        </div>
+                    </div>
+                    <div class="version_record upd_margin_top" style="display: inline-flex;">
+                        <div class="upd_title">修改记录</div>
+                        <textarea id="version_text" class="upd_block border_style " style="margin-left: 20px;">描述信息</textarea>
+                    </div>
+                </div>
+
+                <!-- file -->
+                <div id="upd_file" class="upd_item_grp">
+                    <div class="upd_title">文件目录</div>
+                    <input type="file" value="选择目录" style="margin-left: 15px;width: 180px;" webkitdirectory directory>
+                </div>
+                <textarea id="modlue_text" class="upd_block border_style upd_item_right upd_margin_top" style="display: block;">描述信息</textarea>
+
+                <div id="btn_submit">
+                    <div class="upd_btn" style="width: 100%;">提交</div>
+                </div>
+            </div>
+
+            <!-- 测试 -->
+            <div style="margin-left: 20px;">
+                <div id="div2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="./scripts/util/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="./scripts/util/mc_sdk_param.js"></script>
+    <script type="text/javascript" src="./scripts/page_index.js"></script>
+    <script type="text/javascript" src="./scripts/cmzInput.js"></script>
+
+    <script>
+        init_create_select()
+        var g_obj_ui_update_dom = new ui_update_dom_val()
+        var g_obj_update_servier = new construct_update_servier_data()
+
+
+        // 初始化选项
+        function init_create_select(dom, callback) {
+            $('#upd_select_modlue').cmzSelect({
+                id: 'id', // 唯一标识
+                arr: [{
+                    id: 1,
+                    name: "147"
+                }], // 数据源
+                label: 'name', // input展示数据
+                callback: on_val_chg_modlue, // 回调函数
+                searchList: ['name'] // 模糊查询字段列表
+            })
+
+            $('#upd_select_version').cmzSelect({
+                id: 'id', // 唯一标识
+                arr: [], // 数据源
+                label: 'name', // input展示数据
+                callback: on_val_chg_version, // 回调函数
+                searchList: ['name'] // 模糊查询字段列表
+            })
+        }
+
+
+        // 选项更新
+        function update_select(str, arr) {
+            if (typeof str === "string") {
+                str = str.trim().toLocaleUpperCase();
+            }
+
+            var dom = null;
+            var callback = null;
+            switch (str) {
+                case "MODULE":
+                    dom = $('#upd_select_modlue');
+                    callback = on_val_chg_modlue;
+                    break;
+                case "VERSION":
+                    dom = $('#upd_select_version');
+                    callback = on_val_chg_version;
+                    break;
+                default:
+                    break;
+            }
+
+            if (dom && dom.length && typeof arr === "object" && typeof dom.cmzSelect === "function") {
+                dom.cmzSelect({
+                    id: 'id', // 唯一标识
+                    arr: arr, // 数据源
+                    label: 'name', // input展示数据
+                    callback: callback, // 回调函数
+                    searchList: ['name'] // 模糊查询字段列表
+                });
+            }
+        }
+
+
+        function on_val_chg_modlue(b_new, val) {
+            console.log(val)
+            g_obj_update_servier.on_module_chg(val)
+        }
+
+        function on_val_chg_version(b_new, val) {
+            console.log(val)
+            g_obj_update_servier.on_version_chg(val)
+        }
+    </script>
+
+</body>
+
+</html>
