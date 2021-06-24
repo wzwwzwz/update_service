@@ -26,7 +26,7 @@
                         <div id='upd_select_modlue' class="item_select"></div>
                     </div>
                 </div>
-                <textarea id="modlue_text" class="upd_block border_style upd_item_right" style="display: block;margin-top: 10px;">描述信息</textarea>
+                <textarea id="modlue_text" class="upd_block border_style upd_item_right" style="display: block;margin-top: 10px;" placeholder="请输入模块描述"></textarea>
 
                 <!-- version -->
                 <div id="upd_version" class="upd_item_grp">
@@ -35,30 +35,32 @@
                         <div class="upd_item">
                             <div id='upd_select_version' class="item_select"></div>
                         </div>
-                        <div class="upd_btn">创建</div>
+                        <!-- <div class="upd_btn">创建</div> -->
                         <div class="upd_btn">刷新</div>
                     </div>
 
                     <div class="version_time">
-                        <div id="version_create_time" class="upd_title upd_margin_top">创建时间
-                            <span class="time_val"></span>
+                        <div id="version_create_time" class="upd_margin_top upd_single_item">
+                            <div class="upd_title">创建时间</div>
+                            <span class="time_val upd_item"></span>
                         </div>
-                        <div id="version_edit_time" class="upd_title upd_margin_top">修改时间
-                            <span class="time_val"></span>
+                        <div id="version_edit_time" class="upd_margin_top upd_single_item">
+                            <div class="upd_title">修改时间</div>
+                            <span class="time_val upd_item"></span>
                         </div>
                     </div>
                     <div class="version_record upd_margin_top" style="display: inline-flex;">
                         <div class="upd_title">修改记录</div>
-                        <textarea id="version_text" class="upd_block border_style " style="margin-left: 20px;">描述信息</textarea>
+                        <textarea id="version_text" class="upd_block border_style " style="margin-left: 20px;" placeholder="请输入版本记录"></textarea>
                     </div>
                 </div>
 
                 <!-- file -->
                 <div id="upd_file" class="upd_item_grp">
                     <div class="upd_title">文件目录</div>
-                    <input type="file" value="选择目录" style="margin-left: 15px;width: 180px;" webkitdirectory directory>
+                    <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 180px;" webkitdirectory directory onchange="on_file_chg(this)">
                 </div>
-                <textarea id="modlue_text" class="upd_block border_style upd_item_right upd_margin_top" style="display: block;">描述信息</textarea>
+                <textarea id="modlue_text" class="upd_block border_style upd_item_right upd_margin_top" style="display: block;" placeholder="请输入版本记录"></textarea>
 
                 <div id="btn_submit">
                     <div class="upd_btn" style="width: 100%;">提交</div>
@@ -66,13 +68,17 @@
             </div>
 
             <!-- 测试 -->
-            <div style="margin-left: 20px;">
-                <div id="div2"></div>
+            <div style="margin: 20px;">
+                <div id="add_record" class="upd_btn" onclick="add_record('module')">添加模块</div>
+                <div id="add_record" class="upd_btn" onclick="add_record('version')">添加版本</div>
+                <div id="add_record" class="upd_btn" onclick="add_record('file')">添加文件</div>
+                <div id="add_record" class="upd_btn" onclick="version_test_set()">version_test_set</div>
             </div>
         </div>
     </div>
 
     <script type="text/javascript" src="./scripts/util/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="./scripts/util/spark-md5.min.js"></script>
     <script type="text/javascript" src="./scripts/util/mc_sdk_param.js"></script>
     <script type="text/javascript" src="./scripts/page_index.js"></script>
     <script type="text/javascript" src="./scripts/cmzInput.js"></script>
@@ -107,7 +113,7 @@
 
 
         // 选项更新
-        function update_select(str, arr) {
+        function update_select(str, arr, cur_id) {
             if (typeof str === "string") {
                 str = str.trim().toLocaleUpperCase();
             }
@@ -131,6 +137,7 @@
                 dom.cmzSelect({
                     id: 'id', // 唯一标识
                     arr: arr, // 数据源
+                    currentId: cur_id, //当前选项id
                     label: 'name', // input展示数据
                     callback: callback, // 回调函数
                     searchList: ['name'] // 模糊查询字段列表
@@ -138,15 +145,118 @@
             }
         }
 
-
         function on_val_chg_modlue(b_new, val) {
             console.log(val)
+            if (b_new) {
+                val = {
+                    id: -1,
+                    name: val
+                }
+            }
             g_obj_update_servier.on_module_chg(val)
         }
 
         function on_val_chg_version(b_new, val) {
             console.log(val)
+            if (b_new) {
+                val = {
+                    id: -1,
+                    name: val
+                }
+            }
             g_obj_update_servier.on_version_chg(val)
+        }
+
+        var g_test_req = new construct_update_req()
+
+
+
+        // 文本框编辑
+        $("textarea").on("blur", function (event) {
+            console.log("树胶", event);
+            if (event && event.target) {
+                switch (event.target.id) {
+                    case "modlue_text":
+                        g_obj_update_servier.on_module_disctipt_chg(this.value)
+                        break;
+                    case "version_text":
+                        g_obj_update_servier.on_version_disctipt_chg(this.value)
+                        break;
+                    default:
+                        break;
+                }
+            }
+        })
+
+        document.getElementById("btn_submit").onclick = function () {
+            g_obj_update_servier.commit()
+        }
+
+        function on_file_chg(params) {
+            console.log("文件上传");
+            // on_sel_dir(function () {
+            //     // 构造文件夹属性结构
+            //     construct_file_true(params.files)
+            // })
+        }
+    </script>
+
+    <!-- 测试代码 -->
+    <script>
+        function add_record(type) {
+            var arr = []
+            switch (type) {
+                case "module":
+                    arr = obj_data_response.module_info.PARAMS
+                    g_test_req.moudlue_info(arr, function () {
+                        console.log("添加返回");
+                    }, true)
+                    break;
+                case "version":
+                    arr = obj_data_response.version_info
+                    break;
+                case "file":
+                    break;
+                default:
+                    break;
+            }
+
+            console.log(arr);
+        }
+
+
+        function version_test_set() {
+            let obj_req_json = {
+                func: "version_info",
+                cmd: "set",
+                params: [{
+                    "123698": "1",
+                    ATTRS: {
+                        "INDEX": "-1",
+                        "MODULE": "123698",
+                        "VERSION": "1.0.5",
+                        "LOG": "社会主义好\n共产主义好"
+                    }
+                }]
+            };
+
+            $.ajax({
+                url: "Api",
+                data: JSON.stringify({
+                    id: "456481686",
+                    param: JSON.stringify(obj_req_json),
+                    code: 2
+                }),
+                type: "post",
+                contentType: "application/json",
+                dataType: "json",
+                success: function (obj_srv_dat) {
+
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log("failed msg : " + xhr.responseText);
+                }
+            });
         }
     </script>
 
