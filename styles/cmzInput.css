@@ -109,6 +109,9 @@ ul {
   z-index: 10001;
   margin-top: 8px;
   box-sizing: border-box;
+  margin-top: 0px;
+  box-shadow: 0 1px 1px 1px rgb(0 0 0 / 20%);
+  background-color: #eee;
 }
 
 .cmz-select ul.listT {

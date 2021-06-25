@@ -6,23 +6,22 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>摩西尔LED显示控制-更新</title>
-
-
     <link rel="Shortcut Icon" href="./images/logo.png" id="theme_logo">
     <link rel="stylesheet" href="./styles/cmzInput.css" />
     <link rel="stylesheet" href="./styles/page_index.css" id="theme_page" />
-
+    <!-- 引入layui.css -->
+    <link rel="stylesheet" href="./scripts/util/layui-v2.6.4/css/layui.css" media="all">
 </head>
 
 <body>
     <div id="page_container" class="page_update">
         <div class="main_content">
             <!-- modlue_name 表示模块名称 唯一性 -->
-            <div class="form" style="" modlue_name=''>
+            <div id="upd_form" class="form" modlue_name=''>
                 <!-- nodlue -->
-                <div id="upd_modlue" class="upd_item_grp">
+                <div id="upd_modlue" class="upd_item_grp upd_single_item">
                     <div class="upd_title"> 模块</div>
-                    <div class="upd_item" style="display: inline-flex;">
+                    <div class="upd_item">
                         <div id='upd_select_modlue' class="item_select"></div>
                     </div>
                 </div>
@@ -30,7 +29,7 @@
 
                 <!-- version -->
                 <div id="upd_version" class="upd_item_grp">
-                    <div style="display: inline-flex;">
+                    <div class="upd_single_item">
                         <div class="upd_title">版本号</div>
                         <div class="upd_item">
                             <div id='upd_select_version' class="item_select"></div>
@@ -60,7 +59,8 @@
                     <div class="upd_title">文件目录</div>
                     <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 180px;" webkitdirectory directory onchange="on_file_chg(this)">
                 </div>
-                <textarea id="modlue_text" class="upd_block border_style upd_item_right upd_margin_top" style="display: block;" placeholder="请输入版本记录"></textarea>
+                <!-- <textarea id="file_text" class="upd_block border_style upd_item_right upd_margin_top" style="display: block;" placeholder="请输入版本记录"></textarea> -->
+                <div id="file_text" class="upd_block border_style upd_item_right upd_margin_top"></div>
 
                 <div id="btn_submit">
                     <div class="upd_btn" style="width: 100%;">提交</div>
@@ -77,9 +77,10 @@
         </div>
     </div>
 
+    <!-- 引入layui.js -->
+    <script type="text/javascript" src="./scripts/util/layui-v2.6.4/layui.js" charset="utf-8"></script>
     <script type="text/javascript" src="./scripts/util/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="./scripts/util/spark-md5.min.js"></script>
-    <script type="text/javascript" src="./scripts/util/mc_sdk_param.js"></script>
     <script type="text/javascript" src="./scripts/page_index.js"></script>
     <script type="text/javascript" src="./scripts/cmzInput.js"></script>
 
@@ -93,10 +94,7 @@
         function init_create_select(dom, callback) {
             $('#upd_select_modlue').cmzSelect({
                 id: 'id', // 唯一标识
-                arr: [{
-                    id: 1,
-                    name: "147"
-                }], // 数据源
+                arr: [], // 数据源
                 label: 'name', // input展示数据
                 callback: on_val_chg_modlue, // 回调函数
                 searchList: ['name'] // 模糊查询字段列表
@@ -173,7 +171,7 @@
 
         // 文本框编辑
         $("textarea").on("blur", function (event) {
-            console.log("树胶", event);
+            console.log("文本失焦", event);
             if (event && event.target) {
                 switch (event.target.id) {
                     case "modlue_text":
@@ -192,12 +190,60 @@
             g_obj_update_servier.commit()
         }
 
-        function on_file_chg(params) {
+        function on_file_chg(dom) {
             console.log("文件上传");
+
             // on_sel_dir(function () {
             //     // 构造文件夹属性结构
             //     construct_file_true(params.files)
             // })
+
+            var arr_file = dom.files || event.target.files
+            var ui_file_len = arr_file.length
+            if (ui_file_len) {
+                var obj_menu = new construct_file_menu()
+                obj_menu.set_file(arr_file)
+                var tree = obj_menu.get_data()
+                console.log(tree);
+                add_menu_tree(tree)
+            }
+        }
+
+        add_menu_tree()
+
+        function add_menu_tree(arr) {
+            layui.use('tree', function () {
+                var defult = [{
+                    //一级菜单
+                    title: '江西',
+                    children: [{
+                        //二级菜单
+                        title: '南昌',
+                        children: [{
+                            title: '高新区' //三级菜单 
+                            //…… //以此类推，可无限层级
+                        }]
+                    }]
+                }, {
+                    //一级菜单
+                    title: '陕西',
+                    children: [{
+                        title: '西安' //二级菜单
+                    }]
+                }]
+                var data = arr || []
+                console.log("[目录数据]", data);
+                var tree = layui.tree;
+                //渲染
+                var inst1 = tree.render({
+                    //绑定元素
+                    elem: '#file_text',
+                    data: data,
+                    text: {
+                        none: "暂无文件"
+                    }
+                });
+            });
         }
     </script>
 
@@ -216,6 +262,10 @@
                     arr = obj_data_response.version_info
                     break;
                 case "file":
+                    arr = get_file_data()
+                    g_test_req.moudlue_info(arr, function () {
+                        console.log("添加返回");
+                    }, true)
                     break;
                 default:
                     break;
@@ -224,6 +274,19 @@
             console.log(arr);
         }
 
+
+        function get_file_data() {
+            var params = [{
+                "123698": "1",
+                ATTRS: {
+                    "INDEX": "-1",
+                    "MODULE": "123698",
+                    "VERSION": "1.0.5",
+                    "LOG": "社会主义好\n共产主义好"
+                }
+            }]
+            return params
+        }
 
         function version_test_set() {
             let obj_req_json = {

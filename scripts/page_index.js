@@ -80,15 +80,14 @@ function construct_update_req () {
 
         $.ajax({
             url: "Api",
-            data: JSON.stringify({ id: "456481686", param: JSON.stringify(obj_req_json), code: 2 }),
+            data: JSON.stringify(obj_req_json),
             type: "post",
             contentType: "application/json",
             dataType: "json",
             success: function (res) {
-                if (res && res.param) {
-                    var param = JSON.parse(res.param);
-                    console.log(param);
-                    callback(false, param.PARAMS);
+                if (res && res.PARAMS) {
+                    console.log(res);
+                    callback(false, res.PARAMS);
                 }
             },
             error: function (xhr, textStatus, errorThrown) {
@@ -125,19 +124,23 @@ function construct_update_servier_data () {
     var M_CONST_VER = "VER";
     var M_CONST_MD5 = "MD5";
     var M_CONST_SIZE = "SIZE";
-
+    var M_CONST_DATA = "DATA";
     // *****************  define const ***************** //
 
     // 请求对象
     var m_obj_req = new construct_update_req();
+    // 定义单词请求数据长度
+    var m_ui_each_req_len = 5;
 
     // ********************************************************************* DATA ********************************************************************* //
     // 模块数据
     var m_module_data = {};
-    console.log(m_module_data);
+    console.log("[模块数据]", m_module_data);
     // 版本数据
     var m_version_data = {};
-    console.log(m_version_data);
+    console.log("[版本数据]", m_version_data);
+    var m_file_data = {};
+    console.log("[文件数据]", m_file_data);
     // ********************************************************************* DATA ********************************************************************* //
 
 
@@ -150,6 +153,8 @@ function construct_update_servier_data () {
     var m_cur_version_idx = "";
     var m_cur_version_name = "";
     var m_cur_version_log = "";
+    // 文件
+    var m_cur_file_idx = "";
     // ******************** 保存页面数据 ******************** //
 
     // select data
@@ -222,8 +227,43 @@ function construct_update_servier_data () {
         };
     }
 
-    version_item.prototype = new module_itme();
 
+    version_item.prototype = new module_itme();
+    file_item.prototype = new module_itme();
+
+    function file_item () {
+        // m_file_data
+        this.index = "";
+        this.md5 = "";
+        this.name = "";
+        // file_path === name 仅仅用与页面数据保存
+        this.file_path = "";
+        this.size = "";
+        this.data = "";
+
+        this.update_file_info = function (obj_attrs) {
+            if (this.check_val(obj_attrs.INDEX)) {
+                this.index = obj_attrs.INDEX;
+            }
+
+            if (this.check_val(obj_attrs.MD5)) {
+                this.md5 = obj_attrs.MD5;
+            }
+
+            if (this.check_val(obj_attrs.NAME)) {
+                this.name = obj_attrs.NAME;
+                this.file_path = obj_attrs.NAME;
+            }
+
+            if (this.check_val(obj_attrs.SIZE)) {
+                this.size = obj_attrs.SIZE;
+            }
+
+            if (this.check_val(obj_attrs.DATA)) {
+                this.data = obj_attrs.DATA;
+            }
+        };
+    }
 
 
     // init
@@ -238,25 +278,16 @@ function construct_update_servier_data () {
         // 请求下标
         let ui_req_idx = 0;
 
-        if (err) {
-            return;
-        }
-
         if (arr_params && arr_params[0]) {
-            // MODULE_CNT
             ui_module_cnt = Number(arr_params[0].MODULE_CNT);
-            // 测试
-            // ui_module_cnt = 8;
             ui_loop_cnt = Math.ceil(ui_module_cnt / ui_single_num);
 
             if (0 === ui_module_cnt) {
                 return;
             }
 
-            // 请求模块信息
             loop_create_param_module_info(ui_req_idx);
         }
-
 
         // 分块请求模块信息
         function loop_create_param_module_info (ui_start_i, fn_create_param) {
@@ -306,12 +337,11 @@ function construct_update_servier_data () {
             }
 
             ui_req_idx++;
+
             if (ui_req_idx < ui_loop_cnt) {
                 loop_create_param_module_info(ui_req_idx);
             } else {
-                // create option array
                 create_option_module(m_module_data);
-                console.log(m_module_data);
             }
         }
     }
@@ -333,6 +363,7 @@ function construct_update_servier_data () {
                 });
             }
         }
+
         // 设置当前下拉列表选择项
         var obj_set_selected = get_first_opt(m_arr_select_module);
         update_select("module", m_arr_select_module, (obj_set_selected ? obj_set_selected.id : obj_set_selected));
@@ -389,22 +420,21 @@ function construct_update_servier_data () {
         m_obj_req.version_cnt([{ [str_name]: "" }], function (err, arr_version_cnt) {
             if (!err) {
                 ui_version_cnt = Number(arr_version_cnt[0][m_str_module_name]);
-                // 测试
-                // ui_version_cnt = 10;
-
                 if (ui_version_cnt) {
                     get_version_info();
+                } else {
+                    create_option_version([{}]);
                 }
-
             }
         });
 
         m_version_data[m_str_module_name] = [];
         function get_version_info () {
             var m_version_param = [];
+            var str_prefix = "VERSION_";
             for (let idx = 0; idx < ui_version_cnt; idx++) {
                 m_version_param.push({
-                    [m_str_module_name]: idx,
+                    [str_prefix + idx]: idx,
                     [M_CONST_ATTRS]: {
                         [M_CONST_MODULE]: m_str_module_name,
                         [M_CONST_INDEX]: idx + "",
@@ -434,7 +464,7 @@ function construct_update_servier_data () {
                                 continue;
                             }
 
-                            var ui_index = item[m_str_module_name];
+                            var ui_index = item[str_prefix + idx];
                             if (!(m_version_data[m_str_module_name][ui_index] instanceof version_item)) {
                                 m_version_data[m_str_module_name][ui_index] = new version_item();
                             }
@@ -451,6 +481,7 @@ function construct_update_servier_data () {
 
         // 创建版本选项字符串
         function create_option_version (arr_data) {
+            console.log(arr_data);
             m_arr_select_version = [];
             if (typeof arr_data !== "object") {
                 return;
@@ -461,7 +492,7 @@ function construct_update_servier_data () {
                 const item = arr_data[idx];
                 if (item && item.module_name && item.version) {
                     m_arr_select_version.push({
-                        id: item.index || idx,
+                        id: item.index || idx + "",
                         name: item.version
                     });
                 }
@@ -486,32 +517,41 @@ function construct_update_servier_data () {
 
 
     // ******************** 页面数据变动 版本 ******************** //
-    // 版本号修改选项
+    // 版本号修改选项; false === 没有版本数据需要清空
     this.on_version_chg = function (obj_opt) {
-        if (typeof obj_opt !== "object") {
+        if (typeof obj_opt === "object") {
+
+            if (typeof obj_opt.id !== "string") {
+                obj_opt.id = obj_opt.id.toString();
+            }
+
+            m_cur_version_idx = obj_opt.id;
+            m_cur_version_name = obj_opt.name;
+
+            if (obj_opt.id !== "-1") {
+                try {
+                    var obj_version = m_version_data[m_cur_module_name][m_cur_version_idx];
+                    if (obj_version) {
+                        m_obj_update_dom.udpate_version_time(obj_version.create_time, obj_version.edit_time, obj_version.log);
+                    }
+                } catch (error) { }
+                // 获取文件
+                construct_file_data(m_cur_module_name, m_cur_version_name);
+            } else {
+                // 新建
+                m_obj_update_dom.udpate_version_time("", "", "");
+                add_menu_tree([]);
+            }
+        }
+
+        if (obj_opt === false) {
+            // 当前没有版本数据
+            m_cur_version_idx = "";
+            m_cur_version_name = "";
+            m_obj_update_dom.udpate_version_time("", "", "");
+            add_menu_tree([]);
             return;
         }
-
-        if (typeof obj_opt.id !== "string") {
-            obj_opt.id = obj_opt.id.toString();
-        }
-
-        m_cur_version_idx = obj_opt.id;
-        m_cur_version_name = obj_opt.name;
-
-        if (obj_opt.id !== "-1") {
-            try {
-                var obj_version = m_version_data[m_cur_module_name][m_cur_version_idx];
-                if (obj_version) {
-                    m_obj_update_dom.udpate_version_time(obj_version.create_time, obj_version.edit_time, obj_version.log);
-                }
-            } catch (error) { }
-        } else {
-            m_obj_update_dom.udpate_version_time("", "", "");
-        }
-
-        // 获取文件
-        construct_file_data(m_cur_module_name, m_cur_version_name);
     };
 
     // 模块描述改动
@@ -530,53 +570,94 @@ function construct_update_servier_data () {
             return false;
         }
 
+        var str_key = str_module + "_" + str_vesion;
+
         m_obj_req.version_file_cnt([{ [str_module]: str_vesion }], function (err, res) {
             if (res && res[0] && res[0].ATTRS) {
-                var ui_cnt = res[0].ATTRS.COUNT;
-                if (ui_cnt) {
-                    ui_cnt = 3;
-                    get_file_info(ui_cnt);
-                }
+                get_file_info(Number(res[0].ATTRS.COUNT));
             }
         });
 
-
-        function get_file_info (ui_cnt) {
-            var arr_file_param = [];
-
-            for (var idx = 0; idx < ui_cnt; idx++) {
-                arr_file_param.push({
-                    [str_module]: [str_vesion],
-                    [M_CONST_ATTRS]: {
-                        [M_CONST_MODULE]: str_module,
-                        [M_CONST_VER]: str_vesion,
-                        [M_CONST_INDEX]: idx + "",
-                        [M_CONST_MD5]: "",
-                        [M_CONST_SIZE]: "",
-                        [M_CONST_NAME]: "",
-                        [M_CONST_CREATE_TIME]: "",
-                        [M_CONST_EDIT_TIME]: "",
-                    }
-                });
-            }
-
-            m_obj_req.version_file_info(arr_file_param, function (err, arr_file_res) {
-                if (arr_file_res) {
-                    var ui_file_len = arr_file_res.length;
-                    for (let idx = 0; idx < ui_file_len; idx++) {
-                        // 构造文件夹属性结构
-                        construct_file_true(params.files);
-                    }
-                }
-            });
+        // 获取文件结束
+        function get_file_data_done () {
+            // 渲染文件目录
+            var obj_menu = new construct_file_menu();
+            obj_menu.set_file(m_file_data[str_key]);
+            add_menu_tree(obj_menu.get_data());
         }
 
+        function get_file_info (ui_cnt) {
+            if (!ui_cnt) {
+                get_file_data_done();
+            }
 
+            var ui_file_cnt = ui_cnt;
+            var ui_each_cnt = m_ui_each_req_len;
+            // 请求次数
+            var ui_loop_cnt = Math.ceil(ui_file_cnt / ui_each_cnt);
+            var ui_loop_idx = 0;
+            m_file_data[str_key] = [];
+
+            loop_create_param_file_info(ui_loop_idx);
+
+            // 下一个分块
+            function loop_file_next () {
+                ui_loop_idx++;
+                if (ui_loop_idx < ui_loop_cnt) {
+                    loop_create_param_file_info(ui_loop_idx);
+                } else {
+                    get_file_data_done();
+                }
+            }
+
+            // 分块请求文件信息
+            function loop_create_param_file_info (start_idx) {
+                let ui_idx_start = start_idx * ui_each_cnt;
+                let ui_idx_end = ((ui_idx_start + ui_each_cnt) >= ui_file_cnt) ? ui_file_cnt : (ui_idx_start + ui_each_cnt);
+
+                let arr_file_param = [];
+                let ui_idx = ui_idx_start;
+                while (ui_idx < ui_idx_end) {
+                    arr_file_param.push({
+                        ["file_" + ui_idx]: ui_idx + "",
+                        [M_CONST_ATTRS]: {
+                            [M_CONST_MODULE]: str_module,
+                            [M_CONST_VER]: str_vesion,
+                            [M_CONST_INDEX]: ui_idx + "",
+                            [M_CONST_MD5]: "",
+                            [M_CONST_SIZE]: "",
+                            [M_CONST_NAME]: "",
+                            [M_CONST_CREATE_TIME]: "",
+                            [M_CONST_EDIT_TIME]: "",
+                            [M_CONST_DATA]: ""
+                        }
+                    });
+                    ui_idx++;
+                }
+
+                m_obj_req.version_file_info(arr_file_param, function (err, arr_file_res) {
+                    if (arr_file_res) {
+                        var ui_file_len = arr_file_res.length;
+                        var ui_file_data_idx = ui_loop_idx * ui_each_cnt;
+                        for (let idx = 0; idx < ui_file_len; idx++) {
+                            var obj_attr = arr_file_res[idx].ATTRS;
+                            m_file_data[str_key][ui_file_data_idx] = new file_item();
+                            m_file_data[str_key][ui_file_data_idx].update_base_info(obj_attr);
+                            m_file_data[str_key][ui_file_data_idx].update_file_info(obj_attr);
+                            ui_file_data_idx++;
+                        }
+                    }
+
+                    loop_file_next();
+                });
+            }
+        }
     }
 
 
-    // 提交
+    // ********************************************************************* 提交 ********************************************************************* //
     this.commit = function () {
+        m_obj_update_dom.is_commit(true);
         add_module();
         function add_module () {
             var module_data = [{
@@ -607,59 +688,251 @@ function construct_update_servier_data () {
             }];
             m_obj_req.version_info(version_data, function (err, res) {
                 console.log("[写入版本返回参数]", res);
-                add_file();
+                get_onload_file_data();
             }, true);
         }
 
-        function add_file () {
-            var file_data = [];
-            get_onload_file_data();
-            m_obj_req.version_file_info(file_data, function (err, res) {
-                console.log("[写入文件返回参数]", res);
-            }, true);
-        }
-
-        function get_onload_file_data (params) {
+        function get_onload_file_data () {
             var obj_file_input = m_obj_update_dom.get_file_target();
             if (!obj_file_input) {
+                m_obj_update_dom.is_commit(false);
                 return;
             }
 
             var arr_files = obj_file_input.files;
             var ui_file_cnt = arr_files.length;
-            if (ui_file_cnt) {
-                // 上传
-                on_sel_dir(function () {
-                    var arr_file_param = [];
-                    for (var idx = 0; idx < ui_file_cnt; idx++) {
-                        arr_file_param.push({
-                            // [str_module]: [str_vesion],
-                            // [M_CONST_ATTRS]: {
-                            //     [M_CONST_MODULE]: str_module,
-                            //     [M_CONST_VER]: str_vesion,
-                            //     [M_CONST_INDEX]: idx + "",
-                            //     [M_CONST_MD5]: "",
-                            //     [M_CONST_SIZE]: "",
-                            //     [M_CONST_NAME]: "",
-                            //     [M_CONST_CREATE_TIME]: "",
-                            //     [M_CONST_EDIT_TIME]: "",
-                            // }
+            if (!ui_file_cnt) {
+                m_obj_update_dom.is_commit(false);
+                return;
+            }
+
+            // 上传文件
+            on_sel_dir();
+
+            // 请求
+            // upload_done();
+
+            function upload_done () {
+                var arr_file_param = [];
+                for (var idx = 0; idx < ui_file_cnt; idx++) {
+                    var obj_file_item = arr_files[idx];
+                    var str_path = obj_file_item.webkitRelativePath;
+                    arr_file_param.push({
+                        ["file_" + idx]: "",
+                        [M_CONST_ATTRS]: {
+                            [M_CONST_MODULE]: m_cur_module_name,
+                            [M_CONST_VER]: m_cur_version_name,
+                            [M_CONST_INDEX]: idx + "",
+                            [M_CONST_MD5]: "",
+                            [M_CONST_SIZE]: obj_file_item.size + "",
+                            [M_CONST_NAME]: str_path.substring(str_path.indexOf("/") + 1),
+                            [M_CONST_CREATE_TIME]: "",
+                            [M_CONST_EDIT_TIME]: "",
+                        }
+                    });
+                }
+            }
+
+            // ********************************************************************* 文件上传 ********************************************************************* //
+            function on_sel_dir () {
+                let ary_files = arr_files;
+                let ui_file_idx = 0;
+                let obj_ver_info_req = {
+                    CMD: "set",
+                    FUNC: "VERSION_FILE_INFO",
+                    PARAMS: []
+                };
+
+                function operator_next_file () {
+                    if (ui_file_idx >= ui_file_cnt) {
+                        upload_status("正在归档所有文件信息...");
+
+                        $.ajax({
+                            url: "Api",
+                            data: JSON.stringify(obj_ver_info_req),
+                            type: "post",
+                            contentType: "application/json",
+                            dataType: "json",
+                            success: function (obj_srv_dat) {
+                                upload_status("所有文件信息归档完成");
+                            },
+                            error: function (xhr, textStatus, errorThrown) {
+                                console.log("failed msg : " + xhr.responseText);
+                            }
+                        });
+
+                        console.log("file operator finished");
+                    } else {
+                        calculate_md5(ary_files[ui_file_idx], function (md5) {
+                            var str_path = ary_files[ui_file_idx].webkitRelativePath;
+                            obj_ver_info_req.PARAMS[ui_file_idx] = {
+                                ["File_" + ui_file_idx]: "",
+                                ATTRS: {
+                                    MODULE: m_cur_module_name,
+                                    VER: m_cur_version_name,
+                                    INDEX: "-1",
+                                    MD5: md5,
+                                    NAME: str_path.substring(str_path.indexOf("/") + 1),
+                                    SIZE: ary_files[ui_file_idx].size.toString()
+                                }
+                            };
+
+                            console.log("File:" + ary_files[ui_file_idx].webkitRelativePath + "\nSize:" + ary_files[ui_file_idx].size + "\nMd5:" + md5);
+
+                            /* check file exist */
+                            let obj_req_json = {
+                                func: "VERSION_FILE_EXIST",
+                                cmd: "GET",
+                                params: [{
+                                    [md5]: ""
+                                }]
+                            };
+
+                            upload_status("文件" + ui_file_idx + "： 准备秒传数据...");
+                            $.ajax({
+                                url: "Api",
+                                data: JSON.stringify(obj_req_json),
+                                type: "post",
+                                contentType: "application/json",
+                                dataType: "json",
+                                success: function (obj_srv_dat) {
+                                    let b_status = obj_srv_dat.PARAMS[0][md5.toUpperCase()];
+
+                                    if ("0" == b_status) {
+                                        upload_file(ary_files[ui_file_idx], md5, function () {
+                                            upload_status("文件" + ui_file_idx + "： 常规传输完成");
+
+                                            ui_file_idx++;
+                                            operator_next_file();
+                                        });
+                                    } else {
+                                        console.log("File " + md5 + "Exist, Not Upload");
+                                        upload_status("文件" + ui_file_idx + ": 秒传数据完成");
+                                        ui_file_idx++;
+                                        operator_next_file();
+                                    }
+                                },
+                                error: function (xhr, textStatus, errorThrown) {
+                                    console.log("failed msg : " + xhr.responseText);
+                                }
+                            });
+
                         });
                     }
+                }
 
-                    m_obj_req.version_file_info(arr_file_param, function (err, arr_file_res) {
-                        if (arr_file_res) {
-                            var ui_file_len = arr_file_res.length;
-                            for (let idx = 0; idx < ui_file_len; idx++) {
+                function upload_file (cla_file_obj, str_file_md5, fn_callback) {
+                    let obj_blob_slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+                    const ui_slice_size = 2097152; /* 2M */
+                    let ui_slice_cnt = Math.ceil(cla_file_obj.size / ui_slice_size);
+                    let ui_slice_idx = 0;
+                    let cla_file_reader = new FileReader();
 
+                    let ui_sta_pos = 0;
+                    let ui_end_pos = 0;
+
+                    cla_file_reader.onload = function (e) {
+
+                        let obj_req_json = {
+                            func: "VERSION_FILE_DATA",
+                            cmd: "SET",
+                            params: [{
+                                [str_file_md5]: "",
+                                attrs: {
+                                    OFFSET: ui_sta_pos.toString(),
+                                    LENGTH: (ui_end_pos - ui_sta_pos).toString(),
+                                    DATA: arrayBufferToBase64(e.target.result)
+                                }
+                            }]
+                        };
+
+                        $.ajax({
+                            url: "Api",
+                            data: JSON.stringify(obj_req_json),
+                            type: "post",
+                            contentType: "application/json",
+                            dataType: "json",
+                            success: function (obj_srv_dat) {
+                                upload_status("文件" + ui_file_idx + "： 上传 " + ui_slice_idx * 100.0 / ui_slice_cnt + "%");
+
+                                ui_slice_idx++;
+                                if (ui_slice_idx <= ui_slice_cnt) {
+                                    send_next_slice();
+                                } else {
+                                    console.log("File " + str_file_md5 + "Upload finished");
+
+                                    if (null != fn_callback) {
+                                        fn_callback();
+                                    }
+                                }
+                            },
+                            error: function (xhr, textStatus, errorThrown) {
+                                console.log("failed msg : " + xhr.responseText);
+                            }
+                        });
+                    };
+
+                    function send_next_slice () {
+                        ui_sta_pos = ui_slice_idx * ui_slice_size;
+                        ui_end_pos = (ui_sta_pos + ui_slice_size > cla_file_obj.size) ? cla_file_obj.size : (ui_sta_pos + ui_slice_size);
+
+                        if (ui_sta_pos > ui_end_pos) {
+                            ui_sta_pos = ui_end_pos;
+                        }
+
+                        cla_file_reader.readAsArrayBuffer(obj_blob_slice.call(cla_file_obj, ui_sta_pos, ui_end_pos));
+                    }
+
+                    send_next_slice();
+                }
+
+                function calculate_md5 (cla_file_obj, fn_callback) {
+                    let obj_blob_slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+                    const ui_slice_size = 2097152; /* 2M */
+                    let ui_slice_cnt = Math.ceil(cla_file_obj.size / ui_slice_size);
+                    let ui_slice_idx = 0;
+                    let cla_md5_oper = new SparkMD5.ArrayBuffer();
+                    let cla_file_reader = new FileReader();
+
+                    cla_file_reader.onload = function (e) {
+                        cla_md5_oper.append(e.target.result); // Append array buffer
+                        ui_slice_idx++;
+
+                        if (ui_slice_idx < ui_slice_cnt) {
+                            load_next_slice();
+                        } else {
+                            let str_hex_md5 = cla_md5_oper.end();
+                            if (null != fn_callback) {
+                                fn_callback(str_hex_md5);
                             }
                         }
-                    }, true);
-                });
+                    };
+
+                    function load_next_slice () {
+                        let ui_sta_pos = ui_slice_idx * ui_slice_size;
+                        let ui_end_pos = (ui_sta_pos + ui_slice_size > cla_file_obj.size) ? cla_file_obj.size : (ui_sta_pos + ui_slice_size);
+
+                        if (ui_sta_pos > ui_end_pos) {
+                            ui_sta_pos = ui_end_pos;
+                        }
+
+                        cla_file_reader.readAsArrayBuffer(obj_blob_slice.call(cla_file_obj, ui_sta_pos, ui_end_pos));
+                    }
+
+                    load_next_slice();
+                }
+
+                operator_next_file();
+            }
+
+            // 更新状态
+            function upload_status (msg) {
+                // document.getElementById("status").innerText = msg;
             }
         }
     };
 }
+
 
 
 
@@ -698,7 +971,6 @@ function construct_req_json () {
 
 
 
-
 // ui 更新数据相关
 function ui_update_dom_val () {
     // 更新版本数据
@@ -717,7 +989,7 @@ function ui_update_dom_val () {
 
         var obj_log = document.getElementById("version_text");
         if (obj_log && typeof log === "string") {
-            obj_log.innerHTML = log;
+            obj_log.value = log;
         }
     };
 
@@ -725,7 +997,7 @@ function ui_update_dom_val () {
     this.update_module_info = function (discript) {
         var obj_log = document.getElementById("modlue_text");
         if (obj_log && typeof discript === "string") {
-            obj_log.innerHTML = discript;
+            obj_log.value = discript;
         }
     };
 
@@ -733,7 +1005,7 @@ function ui_update_dom_val () {
     this.update_version_log = function (discript) {
         var obj_log = document.getElementById("version_text");
         if (obj_log && typeof discript === "string") {
-            obj_log.innerHTML = discript;
+            obj_log.value = discript;
         }
     };
 
@@ -742,139 +1014,149 @@ function ui_update_dom_val () {
         this.update_module_info("");
         this.udpate_version_time("", "", "");
         update_select("version", []);
+        add_menu_tree([]);
     };
 
+    // 获取模块描述
     this.get_module_discript = function () {
         var obj_module_discript = document.getElementById("modlue_text");
         if (obj_module_discript) {
-            return obj_module_discript.innerHTML;
+            return obj_module_discript.value;
         }
     };
 
+    // 获取文件input
     this.get_file_target = function () {
         return document.getElementById("upd_file_input");
     };
 
+    this.is_commit = function (b) {
+        var obj_form = document.getElementById("upd_form");
+        if (obj_form) {
+            var str_operation = b ? "add" : "remove";
+            obj_form.classList[str_operation]("is_submitting");
+        }
+    };
 }
 
 
-function on_sel_dir (callback) {
-    let ary_files = event.target.files;
-    let ui_file_idx = 0;
+// 构建文件目录
+function construct_file_menu () {
+    var m_arr_files = [];
+    var m_tree_data = [];
+    var m_this = this;
+    // 设置的文件位置map
+    var m_obj_map = {};
 
-    function uploader_next_file () {
-        if (ui_file_idx >= ary_files.length) {
-            console.log("finished");
-            if (typeof callback === "function") {
-                callback();
-            }
-        } else {
-            calculate_next_md5();
+    this.set_file = function (arr) {
+        if (typeof arr === "object") {
+            m_arr_files = arr;
+            m_tree_data = [];
+            m_obj_map = {};
         }
-    }
+    };
 
-    function calculate_next_md5 () {
-        let cla_file_obj = ary_files[ui_file_idx];
-        let obj_blob_slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-        const ui_slice_size = 2097152; /* 2M */
-        let ui_slice_cnt = Math.ceil(cla_file_obj.size / ui_slice_size);
-        let ui_slice_idx = 0;
-        let cla_md5_oper = new SparkMD5.ArrayBuffer();
-        let cla_file_reader = new FileReader();
-
-        cla_file_reader.onload = function (e) {
-            cla_md5_oper.append(e.target.result);  // Append array buffer
-            ui_slice_idx++;
-
-            if (ui_slice_idx < ui_slice_cnt) {
-                load_next_slice();
-            } else {
-                let str_hex_md5 = cla_md5_oper.end();
-
-                // save md5 
-                ary_files[ui_file_idx].MD5 = str_hex_md5;
-                ui_file_idx++;
-
-                uploader_next_file();
-            }
-        };
-
-        function load_next_slice () {
-            let ui_sta_pos = ui_slice_idx * ui_slice_size;
-            let ui_end_pos = (ui_sta_pos + ui_slice_size > cla_file_obj.size) ? cla_file_obj.size : (ui_sta_pos + ui_slice_size);
-
-            cla_file_reader.readAsArrayBuffer(obj_blob_slice.call(cla_file_obj, ui_sta_pos, ui_end_pos));
+    this.set_item = function (index, name, pre, b_show) {
+        if (typeof index !== "number" && typeof name !== "string" || typeof pre !== "object") {
+            return;
         }
 
-        load_next_slice();
-    }
+        var str_key = pre.str_parent + "_" + index + "_" + name;
 
-    uploader_next_file();
+        if (!m_obj_map[str_key]) {
+            m_obj_map[str_key] = true;
+            pre.arr_parent.push({
+                title: name,
+                children: [],
+                // 节点是否展开
+                spread: b_show || false
+            });
+        }
 
-    /////////////////////////////
-    /*
-    let ary_files = event.target.files;
-    for (let idx_file = 0; idx_file < ary_files.length; idx_file++) {
-
-        let str_name = ary_files[idx_file].webkitRelativePath;
-        let str_md5 = "aabbccddeeffee_" + idx_file;
-        let str_size = ary_files[idx_file].size;
-        // let str_data = ;
-
-        let obj_file = ary_files[idx_file];
-        let file_reader = new FileReader();
-
-        file_reader.onloadend = function () {
-            if (file_reader.error) {
-                // layer.alert("文件加载失败")
-            } else {
-
-                let str_data = arrayBufferToBase64(file_reader.result);
-                let str_param_key = "File_" + idx_file;
-
-                let obj_req_json = {
-                    func: "VERSION_FILE_INFO",
-                    cmd: "sET",
-                    params: [
-                        {
-                            [str_param_key]: idx_file,
-                            attrs: {
-                                MODULE: "frame",
-                                ver: "1.0.5",
-                                index: "-1",
-                                md5: str_md5,
-                                name: str_name,
-                                size: str_size,
-                                data: str_data
-                            }
-                        }
-                    ]
-                };
-
-                $.ajax({
-                    url: "Api",
-                    data: JSON.stringify({ id: "456481686", param: JSON.stringify(obj_req_json), code: 2 }),
-                    type: "post",
-                    contentType: "application/json",
-                    dataType: "json",
-                    success: function (obj_srv_dat) {
-
-                    },
-                    error: function (xhr, textStatus, errorThrown) {
-                        console.log("failed msg : " + xhr.responseText);
-                    }
-                });
-            }
+        return {
+            arr_parent: pre.arr_parent[pre.arr_parent.length - 1].children,
+            str_parent: str_key
         };
-        file_reader.readAsArrayBuffer(obj_file);
-        
-    }
-    // dom_elem_file.value = "";
-    */
+    };
+
+    this.get_data = function () {
+        if (m_arr_files) {
+            var ui_file_cnt = m_arr_files.length;
+            // 获取路径的名称
+            var str_path_property = "file_path";
+            var ui_fisrt_path = 0;
+            if (m_arr_files.constructor === FileList) {
+                str_path_property = "webkitRelativePath";
+                ui_fisrt_path = 1;
+            }
+            for (var idx = 0; idx < ui_file_cnt; idx++) {
+                const str_path = m_arr_files[idx][str_path_property];
+                m_this.add_child(str_path, ui_fisrt_path);
+            }
+        }
+
+        return m_tree_data;
+    };
+
+    this.add_child = function (str, ui_path_idx) {
+        if (typeof str !== "string") {
+            return "";
+        }
+
+        // 文件路径
+        var arr_name = str.split("/");
+        // console.log(arr_name);
+
+        // 文件深度
+        var ui_deep = arr_name.length;
+        // 第一层目录去掉
+        var ui_idx = ui_path_idx;
+        var parent_ark = {
+            arr_parent: m_tree_data,
+            str_parent: ""
+        };
+
+        while (ui_idx < ui_deep) {
+            parent_ark = m_this.set_item(0, arr_name[ui_idx], parent_ark);
+            ui_idx++;
+        }
+    };
 }
 
 
-
-function construct_file_true (params) {
-    console.log(params);
+function arrayBufferToBase64 (array) {
+    array = new Uint8Array(array);
+    var length = array.byteLength;
+    var table = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+        'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+        'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+        'w', 'x', 'y', 'z', '0', '1', '2', '3',
+        '4', '5', '6', '7', '8', '9', '+', '/'
+    ];
+    var base64Str = '';
+    for (var i = 0; length - i >= 3; i += 3) {
+        var num1 = array[i];
+        var num2 = array[i + 1];
+        var num3 = array[i + 2];
+        base64Str += table[num1 >>> 2] +
+            table[((num1 & 0b11) << 4) | (num2 >>> 4)] +
+            table[((num2 & 0b1111) << 2) | (num3 >>> 6)] +
+            table[num3 & 0b111111];
+    }
+    var lastByte = length - i;
+    if (lastByte === 1) {
+        var lastNum1 = array[i];
+        base64Str += table[lastNum1 >>> 2] + table[((lastNum1 & 0b11) << 4)] + '==';
+    } else if (lastByte === 2) {
+        var lastNum1 = array[i];
+        var lastNum2 = array[i + 1];
+        base64Str += table[lastNum1 >>> 2] +
+            table[((lastNum1 & 0b11) << 4) | (lastNum2 >>> 4)] +
+            table[(lastNum2 & 0b1111) << 2] +
+            '=';
+    }
+    return base64Str;
 }
