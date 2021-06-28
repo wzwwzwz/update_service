@@ -12,52 +12,44 @@
 
 
 function construct_update_req () {
-    // pakeage new json
-    function new_req_json (cmd, func) {
-        var json = new construct_req_json();
-        json.set_cmd(cmd);
-        json.set_func(func);
-        return json;
-    }
-
-    // MODULE_CNT
+    // UPGRADE_MODULE_CNT
     this.module_cnt = function (callback) {
-        return this.request("MODULE_CNT", [{ "MODULE_CNT": "" }], callback);
+        return this.request("UPGRADE_MODULE_CNT", [{ "UPGRADE_MODULE_CNT": "" }], callback);
     };
 
-    // MODULE_INFO
+    // UPGRADE_MODULE_INFO
     this.moudlue_info = function (arr_param, callback, b_io) {
-        return this.request("MODULE_INFO", arr_param, callback, b_io);
+        return this.request("UPGRADE_MODULE_INFO", arr_param, callback, b_io);
     };
 
-    // VERSION_CNT
+    // UPGRADE_VERSION_CNT
     this.version_cnt = function (arr_param, callback) {
-        return this.request("VERSION_CNT", arr_param, callback);
+        return this.request("UPGRADE_VERSION_CNT", arr_param, callback);
     };
 
-    // VERSION_INFO
+    // UPGRADE_VERSION_INFO
     this.version_info = function (arr_param, callback, b_io) {
-        return this.request("VERSION_INFO", arr_param, callback, b_io);
+        return this.request("UPGRADE_VERSION_INFO", arr_param, callback, b_io);
     };
 
-    // VERSION_FILE_CNT
-    this.version_file_cnt = function (arr_param, callback) {
-        return this.request("VERSION_FILE_CNT", arr_param, callback);
+    // UPGRADE_FILE_CNT
+    this.file_cnt = function (arr_param, callback) {
+        return this.request("UPGRADE_FILE_CNT", arr_param, callback);
     };
 
-    // VERSION_FILE_INFO
-    this.version_file_info = function (arr_param, callback, b_io) {
-        return this.request("VERSION_FILE_INFO", arr_param, callback, b_io);
+    // UPGRADE_FILE_INFO
+    this.file_info = function (arr_param, callback, b_io) {
+        return this.request("UPGRADE_FILE_INFO", arr_param, callback, b_io);
     };
 
-    // VERSION_FILE_EXIST
-    this.version_file_exist = function (arr_param, callback, b_io) {
-        return this.request("VERSION_FILE_EXIST", arr_param, callback, b_io);
+    // UPGRADE_FILE_EXIST
+    this.file_exist = function (arr_param, callback, b_io) {
+        return this.request("UPGRADE_FILE_EXIST", arr_param, callback, b_io);
     };
 
-    // VERSION_FILE_DATA
-    this.version_file_data = function (arr_param, callback, b_io) {
-        return this.request("VERSION_FILE_DATA", arr_param, callback, b_io);
+    // UPGRADE_FILE_DATA
+    this.file_data = function (arr_param, callback, b_io) {
+        return this.request("UPGRADE_FILE_DATA", arr_param, callback, b_io);
     };
 
     // ajax
@@ -199,7 +191,6 @@ function construct_update_servier_data () {
             return false;
         };
     }
-
     // 保存的版本项数据
     function version_item () {
         this.index = "";
@@ -226,10 +217,6 @@ function construct_update_servier_data () {
             }
         };
     }
-
-
-    version_item.prototype = new module_itme();
-    file_item.prototype = new module_itme();
 
     function file_item () {
         // m_file_data
@@ -265,10 +252,23 @@ function construct_update_servier_data () {
         };
     }
 
+    // 继承
+    version_item.prototype = new module_itme();
+    file_item.prototype = new module_itme();
+
+
+    // 清空版本数据（本地保存的）
+    this.clear_version_data = function () {
+        m_cur_version_idx = "";
+        m_cur_version_name = "";
+        m_cur_version_log = "";
+        m_arr_select_version = [];
+    };
 
     // init
     m_obj_req.module_cnt(callback_get_module_cnt);
 
+    // ******************** 模块 ******************** //
     function callback_get_module_cnt (err, arr_params) {
         let ui_module_cnt = 0;
         // 循环请求次数
@@ -277,9 +277,10 @@ function construct_update_servier_data () {
         let ui_single_num = 5;
         // 请求下标
         let ui_req_idx = 0;
+        let str_req_prefix = "MODULE_";
 
         if (arr_params && arr_params[0]) {
-            ui_module_cnt = Number(arr_params[0].MODULE_CNT);
+            ui_module_cnt = Number(arr_params[0].UPGRADE_MODULE_CNT);
             ui_loop_cnt = Math.ceil(ui_module_cnt / ui_single_num);
 
             if (0 === ui_module_cnt) {
@@ -305,13 +306,11 @@ function construct_update_servier_data () {
             let idx = ui_start;
             while (idx < ui_len && idx < ui_module_cnt) {
                 arr_module_option.push({
-                    [idx]: "",
+                    [str_req_prefix + idx]: idx,
                     [M_CONST_ATTRS]: {
-                        INDEX: idx
+                        [M_CONST_INDEX]: idx
                     }
                 });
-
-                m_module_data[idx] = new module_itme();
                 idx++;
             }
 
@@ -329,10 +328,13 @@ function construct_update_servier_data () {
                         continue;
                     }
 
-                    let index = Object.keys(item)[0];
                     let attrs = item[M_CONST_ATTRS];
-                    // 保存模块数据
-                    m_module_data[index].update_base_info(attrs);
+                    if (attrs && attrs.NAME) {
+                        // 保存模块数据
+                        let index = Object.keys(item)[0].split(str_req_prefix)[1];
+                        m_module_data[index] = new module_itme();
+                        m_module_data[index].update_base_info(attrs);
+                    }
                 }
             }
 
@@ -346,21 +348,20 @@ function construct_update_servier_data () {
         }
     }
 
-    // 更新版本下拉框选项
+    // 创建版本下拉框选项
     function create_option_module (obj) {
         console.log(obj);
-        if (typeof obj !== "object") {
-            return;
-        }
 
-        var ui_len = Object.keys(obj).length;
-        for (let idx = 0; idx < ui_len; idx++) {
-            const item = obj[idx];
-            if (item && item.module_name) {
-                m_arr_select_module.push({
-                    id: idx,
-                    name: item.module_name
-                });
+        if (typeof obj === "object") {
+            var ui_len = Object.keys(obj).length;
+            for (let idx = 0; idx < ui_len; idx++) {
+                const item = obj[idx];
+                if (item && item.module_name) {
+                    m_arr_select_module.push({
+                        id: idx,
+                        name: item.module_name
+                    });
+                }
             }
         }
 
@@ -371,18 +372,7 @@ function construct_update_servier_data () {
     }
 
 
-
-    // ******************** 页面数据变动 模块 ******************** //
-    // 模块描述改动
-    this.on_module_disctipt_chg = function (val) {
-        if (typeof val !== "string") {
-            return false;
-        }
-
-        m_cur_module_discript = val;
-    };
-
-
+    // ******************** 数据切换  ******************** //
     // 模块选择框改变
     this.on_module_chg = function (obj_opt) {
         if (typeof obj_opt !== "object") {
@@ -400,9 +390,65 @@ function construct_update_servier_data () {
             m_obj_update_dom.update_module_info(m_module_data[m_cur_module_idx].discript);
             construct_version_data(m_cur_module_name);
         } else {
-            m_obj_update_dom.clear_data();
+            // 新创建模块
+            m_obj_update_dom.update_module_info("");
+            this.on_version_chg(false);
         }
     };
+
+    // 模块描述改动
+    this.on_module_disctipt_chg = function (val) {
+        if (typeof val !== "string") {
+            return false;
+        }
+
+        m_cur_module_discript = val;
+    };
+
+    // 版本号修改选项; false === 没有版本数据需要清空; 下拉框数据变动
+    this.on_version_chg = function (obj_opt) {
+        if (typeof obj_opt === "object") {
+            if (typeof obj_opt.id !== "string") {
+                obj_opt.id = obj_opt.id.toString();
+            }
+
+            m_cur_version_idx = obj_opt.id;
+            m_cur_version_name = obj_opt.name;
+
+            if (obj_opt.id !== "-1") {
+                // 版本选项切换
+                try {
+                    var obj_version = m_version_data[m_cur_module_name][m_cur_version_idx];
+                    if (obj_version) {
+                        m_obj_update_dom.udpate_version_time_log(obj_version.create_time, obj_version.edit_time, obj_version.log);
+                    }
+                } catch (error) { }
+                // 获取文件
+                construct_file_data(m_cur_module_name, m_cur_version_name);
+            } else {
+                // 新建版本
+                m_obj_update_dom.udpate_version_time_log("", "", "");
+                add_menu_tree([]);
+            }
+        }
+
+        if (obj_opt === false) {
+            // 当前没有版本数据
+            m_obj_update_dom.clear_version_data();
+            this.clear_version_data();
+            return;
+        }
+    };
+
+    // 模块描述改动
+    this.on_version_disctipt_chg = function (val) {
+        if (typeof val !== "string") {
+            return false;
+        }
+
+        m_cur_version_log = val;
+    };
+    // ******************** 数据切换 ******************** //
 
 
     // ********************************************************************* 版本 ********************************************************************* //
@@ -418,12 +464,12 @@ function construct_update_servier_data () {
 
         // version_cnt
         m_obj_req.version_cnt([{ [str_name]: "" }], function (err, arr_version_cnt) {
-            if (!err) {
+            if (!err && arr_version_cnt) {
                 ui_version_cnt = Number(arr_version_cnt[0][m_str_module_name]);
                 if (ui_version_cnt) {
                     get_version_info();
                 } else {
-                    create_option_version([{}]);
+                    m_this.on_version_chg(false);
                 }
             }
         });
@@ -505,7 +551,6 @@ function construct_update_servier_data () {
         }
     }
 
-
     // 获取列表第一个选项
     function get_first_opt (arr_opt) {
         if (typeof arr_opt === "object" && typeof arr_opt[0] === "object") {
@@ -515,64 +560,17 @@ function construct_update_servier_data () {
         return false;
     }
 
-
-    // ******************** 页面数据变动 版本 ******************** //
-    // 版本号修改选项; false === 没有版本数据需要清空
-    this.on_version_chg = function (obj_opt) {
-        if (typeof obj_opt === "object") {
-
-            if (typeof obj_opt.id !== "string") {
-                obj_opt.id = obj_opt.id.toString();
-            }
-
-            m_cur_version_idx = obj_opt.id;
-            m_cur_version_name = obj_opt.name;
-
-            if (obj_opt.id !== "-1") {
-                try {
-                    var obj_version = m_version_data[m_cur_module_name][m_cur_version_idx];
-                    if (obj_version) {
-                        m_obj_update_dom.udpate_version_time(obj_version.create_time, obj_version.edit_time, obj_version.log);
-                    }
-                } catch (error) { }
-                // 获取文件
-                construct_file_data(m_cur_module_name, m_cur_version_name);
-            } else {
-                // 新建
-                m_obj_update_dom.udpate_version_time("", "", "");
-                add_menu_tree([]);
-            }
-        }
-
-        if (obj_opt === false) {
-            // 当前没有版本数据
-            m_cur_version_idx = "";
-            m_cur_version_name = "";
-            m_obj_update_dom.udpate_version_time("", "", "");
-            add_menu_tree([]);
-            return;
-        }
-    };
-
-    // 模块描述改动
-    this.on_version_disctipt_chg = function (val) {
-        if (typeof val !== "string") {
-            return false;
-        }
-
-        m_cur_version_log = val;
-    };
-
-
     // ******************** 文件 ******************** //
+    // str_module === 模块名称; str_vesion === 版本名称
     function construct_file_data (str_module, str_vesion) {
         if (typeof str_module !== "string" || typeof str_vesion !== "string") {
             return false;
         }
 
         var str_key = str_module + "_" + str_vesion;
+        m_file_data[str_key] = [];
 
-        m_obj_req.version_file_cnt([{ [str_module]: str_vesion }], function (err, res) {
+        m_obj_req.file_cnt([{ [str_module]: str_vesion }], function (err, res) {
             if (res && res[0] && res[0].ATTRS) {
                 get_file_info(Number(res[0].ATTRS.COUNT));
             }
@@ -589,6 +587,7 @@ function construct_update_servier_data () {
         function get_file_info (ui_cnt) {
             if (!ui_cnt) {
                 get_file_data_done();
+                return;
             }
 
             var ui_file_cnt = ui_cnt;
@@ -635,7 +634,7 @@ function construct_update_servier_data () {
                     ui_idx++;
                 }
 
-                m_obj_req.version_file_info(arr_file_param, function (err, arr_file_res) {
+                m_obj_req.file_info(arr_file_param, function (err, arr_file_res) {
                     if (arr_file_res) {
                         var ui_file_len = arr_file_res.length;
                         var ui_file_data_idx = ui_loop_idx * ui_each_cnt;
@@ -654,44 +653,83 @@ function construct_update_servier_data () {
         }
     }
 
-
     // ********************************************************************* 提交 ********************************************************************* //
     this.commit = function () {
         m_obj_update_dom.is_commit(true);
+
+        // 添加模块
         add_module();
         function add_module () {
+            if (!check_module()) {
+                return;
+            }
+
             var module_data = [{
                 "-1": m_cur_module_name,
                 [M_CONST_ATTRS]: {
                     [M_CONST_INDEX]: "-1",
                     [M_CONST_NAME]: m_cur_module_name,
-                    [M_CONST_DESCRIPT]: m_cur_module_discript || m_obj_update_dom.get_module_discript()
+                    [M_CONST_DESCRIPT]: m_obj_update_dom.get_module_discript()
                 }
             }];
             m_obj_req.moudlue_info(module_data, function (err, res) {
                 console.log("[写入模块返回参数]", res);
                 add_version();
             }, true);
+
+            function check_module () {
+                if (!m_cur_module_name || !m_obj_update_dom.get_module_discript()) {
+                    // 模块描述
+                    alert("必须填写模块描述");
+                    m_obj_update_dom.is_commit(false);
+                    return false;
+                }
+
+                return true;
+            }
         }
 
+        // 添加版本
         function add_version () {
+            if (!check_version()) {
+                return;
+            }
+
             var version_data = [{
                 "-1": m_cur_version_name,
                 [M_CONST_ATTRS]: {
                     [M_CONST_MODULE]: m_cur_module_name,
                     [M_CONST_INDEX]: m_cur_version_idx,
                     [M_CONST_VERSION]: m_cur_version_name,
-                    [M_CONST_LOG]: m_cur_version_log,
+                    [M_CONST_LOG]: m_obj_update_dom.get_version_log(),
                     [M_CONST_CREATE_TIME]: "",
                     [M_CONST_EDIT_TIME]: "",
                 }
             }];
+
             m_obj_req.version_info(version_data, function (err, res) {
                 console.log("[写入版本返回参数]", res);
                 get_onload_file_data();
             }, true);
+
+
+            function check_version () {
+                if (typeof m_cur_version_idx === "undefined" || !m_cur_version_name) {
+                    m_obj_update_dom.is_commit(false);
+                    return false;
+                }
+
+                if (!m_obj_update_dom.get_version_log()) {
+                    m_obj_update_dom.is_commit(false);
+                    alert("必须填写版本日志");
+                    return false;
+                }
+
+                return true;
+            }
         }
 
+        // 添加文件
         function get_onload_file_data () {
             var obj_file_input = m_obj_update_dom.get_file_target();
             if (!obj_file_input) {
@@ -739,7 +777,7 @@ function construct_update_servier_data () {
                 let ui_file_idx = 0;
                 let obj_ver_info_req = {
                     CMD: "set",
-                    FUNC: "VERSION_FILE_INFO",
+                    FUNC: "UPGRADE_FILE_INFO",
                     PARAMS: []
                 };
 
@@ -781,7 +819,7 @@ function construct_update_servier_data () {
 
                             /* check file exist */
                             let obj_req_json = {
-                                func: "VERSION_FILE_EXIST",
+                                func: "UPGRADE_FILE_EXIST",
                                 cmd: "GET",
                                 params: [{
                                     [md5]: ""
@@ -834,7 +872,7 @@ function construct_update_servier_data () {
                     cla_file_reader.onload = function (e) {
 
                         let obj_req_json = {
-                            func: "VERSION_FILE_DATA",
+                            func: "UPGRADE_FILE_DATA",
                             cmd: "SET",
                             params: [{
                                 [str_file_md5]: "",
@@ -934,8 +972,6 @@ function construct_update_servier_data () {
 }
 
 
-
-
 function construct_req_json () {
     var m_json = {
         CMD: "",
@@ -969,16 +1005,16 @@ function construct_req_json () {
     };
 }
 
-
-
 // ui 更新数据相关
 function ui_update_dom_val () {
-    // 更新版本数据
-    this.udpate_version_time = function (t_create, t_edit, log) {
-        var obj_create = document.getElementById("version_create_time");
-        var obj_edit = document.getElementById("version_edit_time");
-        var obj_edit = document.getElementById("version_edit_time");
+    var obj_form = document.getElementById("upd_form");
+    var obj_module_discript = document.getElementById("modlue_text");
+    var obj_create = document.getElementById("version_create_time");
+    var obj_edit = document.getElementById("version_edit_time");
+    var obj_log = document.getElementById("version_text");
 
+    // 更新版本数据
+    this.udpate_version_time_log = function (t_create, t_edit, log) {
         if (obj_create && typeof t_create === "string") {
             obj_create.children[1].innerHTML = t_create;
         }
@@ -987,7 +1023,6 @@ function ui_update_dom_val () {
             obj_edit.children[1].innerHTML = t_edit;
         }
 
-        var obj_log = document.getElementById("version_text");
         if (obj_log && typeof log === "string") {
             obj_log.value = log;
         }
@@ -995,33 +1030,35 @@ function ui_update_dom_val () {
 
     // 更新模块信息
     this.update_module_info = function (discript) {
-        var obj_log = document.getElementById("modlue_text");
-        if (obj_log && typeof discript === "string") {
-            obj_log.value = discript;
+        if (obj_module_discript && typeof discript === "string") {
+            obj_module_discript.value = discript;
         }
     };
 
     // 更新版本日志
     this.update_version_log = function (discript) {
-        var obj_log = document.getElementById("version_text");
         if (obj_log && typeof discript === "string") {
             obj_log.value = discript;
         }
     };
 
     // 清空数据; 除了模块选项数据
-    this.clear_data = function (params) {
-        this.update_module_info("");
-        this.udpate_version_time("", "", "");
+    this.clear_version_data = function () {
+        this.udpate_version_time_log("", "", "");
         update_select("version", []);
         add_menu_tree([]);
     };
 
     // 获取模块描述
     this.get_module_discript = function () {
-        var obj_module_discript = document.getElementById("modlue_text");
         if (obj_module_discript) {
             return obj_module_discript.value;
+        }
+    };
+
+    this.get_version_log = function () {
+        if (obj_log) {
+            return obj_log.value;
         }
     };
 
@@ -1031,14 +1068,12 @@ function ui_update_dom_val () {
     };
 
     this.is_commit = function (b) {
-        var obj_form = document.getElementById("upd_form");
         if (obj_form) {
             var str_operation = b ? "add" : "remove";
             obj_form.classList[str_operation]("is_submitting");
         }
     };
 }
-
 
 // 构建文件目录
 function construct_file_menu () {
@@ -1110,7 +1145,7 @@ function construct_file_menu () {
         // 文件深度
         var ui_deep = arr_name.length;
         // 第一层目录去掉
-        var ui_idx = ui_path_idx;
+        var ui_idx = ui_path_idx || 0;
         var parent_ark = {
             arr_parent: m_tree_data,
             str_parent: ""
@@ -1136,7 +1171,7 @@ function arrayBufferToBase64 (array) {
         'w', 'x', 'y', 'z', '0', '1', '2', '3',
         '4', '5', '6', '7', '8', '9', '+', '/'
     ];
-    var base64Str = '';
+    var base64Str = "";
     for (var i = 0; length - i >= 3; i += 3) {
         var num1 = array[i];
         var num2 = array[i + 1];

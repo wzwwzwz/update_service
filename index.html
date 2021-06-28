@@ -35,7 +35,7 @@
                             <div id='upd_select_version' class="item_select"></div>
                         </div>
                         <!-- <div class="upd_btn">创建</div> -->
-                        <div class="upd_btn">刷新</div>
+                        <!-- <div class="upd_btn">刷新</div> -->
                     </div>
 
                     <div class="version_time">
@@ -68,7 +68,7 @@
             </div>
 
             <!-- 测试 -->
-            <div style="margin: 20px;">
+            <div style="margin: 20px;display: none;">
                 <div id="add_record" class="upd_btn" onclick="add_record('module')">添加模块</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('version')">添加版本</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('file')">添加文件</div>
@@ -110,7 +110,7 @@
         }
 
 
-        // 选项更新
+        // 选项更新; 下拉框选项标记, 选项数组, 当前选中的id
         function update_select(str, arr, cur_id) {
             if (typeof str === "string") {
                 str = str.trim().toLocaleUpperCase();
@@ -175,10 +175,10 @@
             if (event && event.target) {
                 switch (event.target.id) {
                     case "modlue_text":
-                        g_obj_update_servier.on_module_disctipt_chg(this.value)
+                        // g_obj_update_servier.on_module_disctipt_chg(this.value)
                         break;
                     case "version_text":
-                        g_obj_update_servier.on_version_disctipt_chg(this.value)
+                        // g_obj_update_servier.on_version_disctipt_chg(this.value)
                         break;
                     default:
                         break;
@@ -191,21 +191,13 @@
         }
 
         function on_file_chg(dom) {
-            console.log("文件上传");
-
-            // on_sel_dir(function () {
-            //     // 构造文件夹属性结构
-            //     construct_file_true(params.files)
-            // })
-
+            // console.log("文件上传");
             var arr_file = dom.files || event.target.files
             var ui_file_len = arr_file.length
             if (ui_file_len) {
                 var obj_menu = new construct_file_menu()
                 obj_menu.set_file(arr_file)
-                var tree = obj_menu.get_data()
-                console.log(tree);
-                add_menu_tree(tree)
+                add_menu_tree(obj_menu.get_data())
             }
         }
 
