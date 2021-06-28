@@ -265,6 +265,11 @@ function construct_update_servier_data () {
         m_arr_select_version = [];
     };
 
+    // 提交之后刷新
+    this.update = function () {
+        m_obj_req.module_cnt(callback_get_module_cnt);
+    };
+
     // init
     m_obj_req.module_cnt(callback_get_module_cnt);
 
@@ -576,10 +581,11 @@ function construct_update_servier_data () {
             }
         });
 
+        var obj_menu = new construct_file_menu();
+
         // 获取文件结束
         function get_file_data_done () {
             // 渲染文件目录
-            var obj_menu = new construct_file_menu();
             obj_menu.set_file(m_file_data[str_key]);
             add_menu_tree(obj_menu.get_data());
         }
@@ -601,6 +607,7 @@ function construct_update_servier_data () {
 
             // 下一个分块
             function loop_file_next () {
+                get_file_data_done();
                 ui_loop_idx++;
                 if (ui_loop_idx < ui_loop_cnt) {
                     loop_create_param_file_info(ui_loop_idx);
@@ -715,6 +722,7 @@ function construct_update_servier_data () {
 
             function check_version () {
                 if (typeof m_cur_version_idx === "undefined" || !m_cur_version_name) {
+                    m_this.update();
                     m_obj_update_dom.is_commit(false);
                     return false;
                 }
@@ -733,6 +741,7 @@ function construct_update_servier_data () {
         function get_onload_file_data () {
             var obj_file_input = m_obj_update_dom.get_file_target();
             if (!obj_file_input) {
+                m_this.update();
                 m_obj_update_dom.is_commit(false);
                 return;
             }
@@ -740,6 +749,7 @@ function construct_update_servier_data () {
             var arr_files = obj_file_input.files;
             var ui_file_cnt = arr_files.length;
             if (!ui_file_cnt) {
+                m_this.update();
                 m_obj_update_dom.is_commit(false);
                 return;
             }
@@ -793,6 +803,7 @@ function construct_update_servier_data () {
                             dataType: "json",
                             success: function (obj_srv_dat) {
                                 upload_status("所有文件信息归档完成");
+                                m_this.update();
                             },
                             error: function (xhr, textStatus, errorThrown) {
                                 console.log("failed msg : " + xhr.responseText);
@@ -965,7 +976,7 @@ function construct_update_servier_data () {
 
             // 更新状态
             function upload_status (msg) {
-                // document.getElementById("status").innerText = msg;
+                document.getElementById("status").innerText = msg;
             }
         }
     };
@@ -1005,13 +1016,14 @@ function construct_req_json () {
     };
 }
 
-// ui 更新数据相关
+// ui更新数据相关
 function ui_update_dom_val () {
     var obj_form = document.getElementById("upd_form");
     var obj_module_discript = document.getElementById("modlue_text");
     var obj_create = document.getElementById("version_create_time");
     var obj_edit = document.getElementById("version_edit_time");
     var obj_log = document.getElementById("version_text");
+    var obj_file_input = document.getElementById("upd_file_input");
 
     // 更新版本数据
     this.udpate_version_time_log = function (t_create, t_edit, log) {
@@ -1065,6 +1077,13 @@ function ui_update_dom_val () {
     // 获取文件input
     this.get_file_target = function () {
         return document.getElementById("upd_file_input");
+    };
+
+    this.clear_file_input = function name (params) {
+        if (obj_file_input) {
+            obj_file_input.select();
+            document.selection.clear();
+        }
     };
 
     this.is_commit = function (b) {
@@ -1124,6 +1143,7 @@ function construct_file_menu () {
                 str_path_property = "webkitRelativePath";
                 ui_fisrt_path = 1;
             }
+
             for (var idx = 0; idx < ui_file_cnt; idx++) {
                 const str_path = m_arr_files[idx][str_path_property];
                 m_this.add_child(str_path, ui_fisrt_path);
@@ -1142,17 +1162,25 @@ function construct_file_menu () {
         var arr_name = str.split("/");
         // console.log(arr_name);
 
+        if (ui_path_idx) {
+            arr_name.shift();
+        }
+
         // 文件深度
         var ui_deep = arr_name.length;
         // 第一层目录去掉
-        var ui_idx = ui_path_idx || 0;
+        var ui_idx = 0;
         var parent_ark = {
             arr_parent: m_tree_data,
             str_parent: ""
         };
 
         while (ui_idx < ui_deep) {
-            parent_ark = m_this.set_item(0, arr_name[ui_idx], parent_ark);
+            var b_show = false;
+            if (ui_idx === 0 || ui_idx === 1) {
+                b_show = true;
+            }
+            parent_ark = m_this.set_item(0, arr_name[ui_idx], parent_ark, b_show);
             ui_idx++;
         }
     };
@@ -1194,4 +1222,25 @@ function arrayBufferToBase64 (array) {
             '=';
     }
     return base64Str;
+}
+
+
+function get_progress_bar_html (title, width, color) {
+    if ("number" !== typeof width || "string" !== typeof title || "string" !== typeof color) {
+        return "";
+    }
+
+    var default_color = color || "#86e01e";
+    var html = "";
+    var show_percent = width;
+
+    if (100 < Number(width)) {
+        show_percent = 100;
+    }
+
+    html = "<div class='item_pro_block'><div class='mc_lab' style=''>" + title + "</div><div class='mc_lab' style=''> " +
+        width + "%</div><div class='mc_progress_bar_wrap' style=''><div class='mc_progress_bar' style='width:" +
+        show_percent + "%;background-color:" + default_color + "'></div></div></div>";
+
+    return html;
 }

@@ -59,20 +59,34 @@
                     <div class="upd_title">文件目录</div>
                     <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 180px;" webkitdirectory directory onchange="on_file_chg(this)">
                 </div>
-                <!-- <textarea id="file_text" class="upd_block border_style upd_item_right upd_margin_top" style="display: block;" placeholder="请输入版本记录"></textarea> -->
-                <div id="file_text" class="upd_block border_style upd_item_right upd_margin_top"></div>
+
+                <div class="file_wrap upd_block border_style upd_item_right upd_margin_top">
+                    <div id="file_text"></div>
+                </div>
+
+                <div id="file_onload" class="upd_item_right">
+                    <span>加载文件进度</span>
+                    <div class="mc_progress_bar_wrap">
+                        <div id="" class="mc_progress_bar" style="width: 95.95px; background-color: red;height: 10px;"></div>
+                    </div>
+                </div>
+
+
 
                 <div id="btn_submit">
+                    <div id="status" style="text-align: left;"></div>
                     <div class="upd_btn" style="width: 100%;">提交</div>
                 </div>
             </div>
 
             <!-- 测试 -->
-            <div style="margin: 20px;display: none;">
+            <div style="margin: 20px;display: none-;">
                 <div id="add_record" class="upd_btn" onclick="add_record('module')">添加模块</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('version')">添加版本</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('file')">添加文件</div>
                 <div id="add_record" class="upd_btn" onclick="version_test_set()">version_test_set</div>
+
+
             </div>
         </div>
     </div>
@@ -197,13 +211,14 @@
             if (ui_file_len) {
                 var obj_menu = new construct_file_menu()
                 obj_menu.set_file(arr_file)
-                add_menu_tree(obj_menu.get_data())
+                add_menu_tree(obj_menu.get_data(), true)
             }
         }
 
         add_menu_tree()
 
-        function add_menu_tree(arr) {
+        function add_menu_tree(arr, b_save) {
+            clear_file_input(b_save)
             layui.use('tree', function () {
                 var defult = [{
                     //一级菜单
@@ -236,6 +251,21 @@
                     }
                 });
             });
+        }
+
+
+        // 清空input选择的文件; b_save === true 时不清空
+        function clear_file_input(b_save) {
+            var obj_file_input = document.getElementById("upd_file_input");
+            if (obj_file_input && !b_save) {
+                obj_file_input.outerHTML = obj_file_input.outerHTML
+            }
+        };
+
+
+        function update_progress(params) {
+            var file_onload = document.getElementById("file_onload")
+            file_onload.style.width = params + "px"
         }
     </script>
 
