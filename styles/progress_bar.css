@@ -42,7 +42,7 @@
 
 .mc_progress_bar:before {
   bottom: 0;
-  background: url('./stripes.png') 0 0 repeat;
+  /* background: url('./stripes.png') 0 0 repeat; */
   /* border-radius: 4px 4px 0 0; */
 }
 

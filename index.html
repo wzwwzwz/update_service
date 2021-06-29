@@ -8,16 +8,17 @@
     <title>摩西尔LED显示控制-更新</title>
     <link rel="Shortcut Icon" href="./images/logo.png" id="theme_logo">
     <link rel="stylesheet" href="./styles/cmzInput.css" />
-    <link rel="stylesheet" href="./styles/page_index.css" id="theme_page" />
+    <link rel="stylesheet" href="./styles/progress_bar.css" />
     <!-- 引入layui.css -->
     <link rel="stylesheet" href="./scripts/util/layui-v2.6.4/css/layui.css" media="all">
+    <link rel="stylesheet" href="./styles/page_index.css" id="theme_page" />
 </head>
 
 <body>
     <div id="page_container" class="page_update">
         <div class="main_content">
             <!-- modlue_name 表示模块名称 唯一性 -->
-            <div id="upd_form" class="form" modlue_name=''>
+            <div id="upd_form" class="form is_submitting_" modlue_name=''>
                 <!-- nodlue -->
                 <div id="upd_modlue" class="upd_item_grp upd_single_item">
                     <div class="upd_title"> 模块</div>
@@ -34,8 +35,6 @@
                         <div class="upd_item">
                             <div id='upd_select_version' class="item_select"></div>
                         </div>
-                        <!-- <div class="upd_btn">创建</div> -->
-                        <!-- <div class="upd_btn">刷新</div> -->
                     </div>
 
                     <div class="version_time">
@@ -57,36 +56,50 @@
                 <!-- file -->
                 <div id="upd_file" class="upd_item_grp">
                     <div class="upd_title">文件目录</div>
-                    <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 180px;" webkitdirectory directory onchange="on_file_chg(this)">
+                    <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 200px;" webkitdirectory directory onchange="on_file_chg(this)" onclick="click_input_file(this)">
+                    <span id="input_file_tilte">(正在加载文件目录...)</span>
                 </div>
 
                 <div class="file_wrap upd_block border_style upd_item_right upd_margin_top">
                     <div id="file_text"></div>
                 </div>
 
-                <div id="file_onload" class="upd_item_right">
+                <div id="file_onload" class="upd_item_right" style="position: absolute;font-size: 14px;">
                     <span>加载文件进度</span>
+                    <span id='file_total'></span>
                     <div class="mc_progress_bar_wrap">
-                        <div id="" class="mc_progress_bar" style="width: 95.95px; background-color: red;height: 10px;"></div>
+                        <div id="" class="mc_progress_bar"></div>
                     </div>
+                    <span class="progress_text"></span>
                 </div>
-
-
 
                 <div id="btn_submit">
                     <div id="status" style="text-align: left;"></div>
                     <div class="upd_btn" style="width: 100%;">提交</div>
                 </div>
+
+                <!-- 提交遮罩 -->
+                <div id="upd_commit_mask">
+                    <div class="commit_text_wrap">
+                        <div id="commit_text">正在提交
+                            <span class="progress_text"></span>
+                        </div>
+                        <div class="mc_progress_bar_wrap" style="width: 480px;">
+                            <div id="" class="mc_progress_bar"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+
             <!-- 测试 -->
-            <div style="margin: 20px;display: none-;">
+            <div style="margin: 20px;display: none;">
                 <div id="add_record" class="upd_btn" onclick="add_record('module')">添加模块</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('version')">添加版本</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('file')">添加文件</div>
                 <div id="add_record" class="upd_btn" onclick="version_test_set()">version_test_set</div>
-
-
+                <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: auto;" webkitdirectory="" directory="" onchange="on_file_chg(this)"
+                    onclick="click_input_file(this)">
             </div>
         </div>
     </div>
@@ -204,14 +217,64 @@
             g_obj_update_servier.commit()
         }
 
+        function click_input_file(dom) {
+            console.log("147");
+
+            var obj_file_input = document.getElementById("file_onload")
+            if (obj_file_input.style.display !== "none") {
+                event.preventDefault()
+                return
+            }
+        }
+
         function on_file_chg(dom) {
-            // console.log("文件上传");
+            console.log("文件上传");
             var arr_file = dom.files || event.target.files
             var ui_file_len = arr_file.length
             if (ui_file_len) {
                 var obj_menu = new construct_file_menu()
+
+                if (ui_file_len < 2000) {
+                    // obj_menu.set_file(arr_file)
+                    // add_menu_tree(obj_menu.get_data(), true)
+                    // return
+                }
+
+                // 单词渲染条数
+                var ui_step = 100
+                var ui_start_idx = 0
+                var ui_loop_cnt = Math.ceil(ui_file_len / ui_step)
+
+
+                $("#input_file_tilte").css("display", "inline-block")
+
+
                 obj_menu.set_file(arr_file)
-                add_menu_tree(obj_menu.get_data(), true)
+                obj_menu.set_path_name(arr_file)
+                loop_add_menu()
+
+                function loop_add_menu() {
+                    var ui_start = (ui_start_idx) * ui_step
+                    var ui_end = ui_start + ui_step
+                    // var ui_end = (ui_start_idx + 1) * ui_step
+
+                    add_menu_tree(obj_menu.get_data_slice(ui_start, ui_end), true)
+
+                    if (ui_start_idx < ui_loop_cnt) {
+                        // setTimeout(function () {
+                        ui_start_idx++
+                        loop_add_menu()
+                        // }, 500)
+                    } else {
+                        $("#input_file_tilte").css("display", "none")
+                    }
+                }
+
+                // while (ui_start_idx < ui_loop_cnt) {
+                //     // var ui_start = (ui_start_idx) * ui_step
+                //     // var ui_end = ui_start + ui_step
+                // }
+
             }
         }
 
@@ -220,26 +283,8 @@
         function add_menu_tree(arr, b_save) {
             clear_file_input(b_save)
             layui.use('tree', function () {
-                var defult = [{
-                    //一级菜单
-                    title: '江西',
-                    children: [{
-                        //二级菜单
-                        title: '南昌',
-                        children: [{
-                            title: '高新区' //三级菜单 
-                            //…… //以此类推，可无限层级
-                        }]
-                    }]
-                }, {
-                    //一级菜单
-                    title: '陕西',
-                    children: [{
-                        title: '西安' //二级菜单
-                    }]
-                }]
                 var data = arr || []
-                console.log("[目录数据]", data);
+                // console.log("[目录数据]", data);
                 var tree = layui.tree;
                 //渲染
                 var inst1 = tree.render({
@@ -262,10 +307,37 @@
             }
         };
 
+        // percent === 百分比
+        function update_progress(percent) {
+            $("#file_onload .mc_progress_bar").css({
+                width: (210 * percent) + "px"
+            })
 
-        function update_progress(params) {
-            var file_onload = document.getElementById("file_onload")
-            file_onload.style.width = params + "px"
+            var str_per = (percent * 100).toFixed(1)
+            $("#file_onload .progress_text").html(str_per + "%")
+
+            if (percent === 1) {
+                setTimeout(function () {
+                    set_progress()
+                }, 200)
+            }
+        }
+
+        set_progress()
+
+        function set_progress(b_show) {
+            if (b_show) {
+                $("#file_onload").css({
+                    // "opacity": "1",
+                    "display": "inline-block"
+                })
+            } else {
+                $("#file_onload").css({
+                    // "opacity": "0",
+                    "display": "none"
+                })
+                // opacity: 0;
+            }
         }
     </script>
 
