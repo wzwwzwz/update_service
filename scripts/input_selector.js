@@ -180,7 +180,7 @@
         // 无选项下拉列表
         $listT.find("li").on("click", function (params) {
             inputVal = $cmzInput.val();
-            console.log("创建");
+            // console.log("创建");
 
             // 调用回调函数
             if (callback) {

@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>摩西尔LED显示控制-更新</title>
     <link rel="Shortcut Icon" href="./images/logo.png" id="theme_logo">
-    <link rel="stylesheet" href="./styles/cmzInput.css" />
+    <link rel="stylesheet" href="./styles/input_selector.css" />
     <link rel="stylesheet" href="./styles/progress_bar.css" />
     <!-- 引入layui.css -->
     <link rel="stylesheet" href="./scripts/util/layui-v2.6.4/css/layui.css" media="all">
@@ -56,15 +56,30 @@
                 <!-- file -->
                 <div id="upd_file" class="upd_item_grp">
                     <div class="upd_title">文件目录</div>
-                    <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 200px;" webkitdirectory directory onchange="on_file_chg(this)" onclick="click_input_file(this)">
-                    <span id="input_file_tilte">(正在加载文件目录...)</span>
+                    <div class="upd_btn icon_wrap upd_btn_border" style="margin-left: 16px;" onclick='open_file_selector(this)'>
+                        <span style="font-size: 14px;">上传</span>
+                        <span class="icon_upload"></span>
+                        <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: 200px; display: none;" webkitdirectory directory onchange="on_file_chg(this)" onclick="click_input_file(this)">
+                    </div>
+                    <span id="input_file_tilte">
+                        (正在加载目录...)
+                        <!-- <div class="span_load">
+                            <div class="typing_loader"></div>
+                        </div> -->
+                    </span>
                 </div>
 
+                <!-- file tree container -->
                 <div class="file_wrap upd_block border_style upd_item_right upd_margin_top">
-                    <div id="file_text"></div>
+                    <!-- 目录树容器 -->
+                    <div id="file_text">
+                        <!-- 按钮上传的目录 -->
+                        <div id="file_tree_input_upload"></div>
+                    </div>
                 </div>
 
-                <div id="file_onload" class="upd_item_right" style="position: absolute;font-size: 14px;">
+                <!-- progres -->
+                <div id="file_onload" class="upd_item_right" style="position: absolute;font-size: 14px;display: none;">
                     <span>加载文件进度</span>
                     <span id='file_total'></span>
                     <div class="mc_progress_bar_wrap">
@@ -73,6 +88,7 @@
                     <span class="progress_text"></span>
                 </div>
 
+                <!-- commit -->
                 <div id="btn_submit">
                     <div id="status" style="text-align: left;"></div>
                     <div class="upd_btn" style="width: 100%;">提交</div>
@@ -84,7 +100,7 @@
                         <div id="commit_text">正在提交
                             <span class="progress_text"></span>
                         </div>
-                        <div class="mc_progress_bar_wrap" style="width: 480px;">
+                        <div class="mc_progress_bar_wrap" style="width: 280px;">
                             <div id="" class="mc_progress_bar"></div>
                         </div>
                     </div>
@@ -98,8 +114,6 @@
                 <div id="add_record" class="upd_btn" onclick="add_record('version')">添加版本</div>
                 <div id="add_record" class="upd_btn" onclick="add_record('file')">添加文件</div>
                 <div id="add_record" class="upd_btn" onclick="version_test_set()">version_test_set</div>
-                <input id="upd_file_input" type="file" value="选择目录" style="margin-left: 15px;width: auto;" webkitdirectory="" directory="" onchange="on_file_chg(this)"
-                    onclick="click_input_file(this)">
             </div>
         </div>
     </div>
@@ -109,7 +123,7 @@
     <script type="text/javascript" src="./scripts/util/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="./scripts/util/spark-md5.min.js"></script>
     <script type="text/javascript" src="./scripts/page_index.js"></script>
-    <script type="text/javascript" src="./scripts/cmzInput.js"></script>
+    <script type="text/javascript" src="./scripts/input_selector.js"></script>
 
     <script>
         init_create_select()
@@ -170,8 +184,8 @@
             }
         }
 
+        // 数据变动
         function on_val_chg_modlue(b_new, val) {
-            console.log(val)
             if (b_new) {
                 val = {
                     id: -1,
@@ -182,7 +196,6 @@
         }
 
         function on_val_chg_version(b_new, val) {
-            console.log(val)
             if (b_new) {
                 val = {
                     id: -1,
@@ -198,7 +211,7 @@
 
         // 文本框编辑
         $("textarea").on("blur", function (event) {
-            console.log("文本失焦", event);
+            // console.log("文本失焦", event);
             if (event && event.target) {
                 switch (event.target.id) {
                     case "modlue_text":
@@ -213,13 +226,14 @@
             }
         })
 
+
+        // 点击提交按钮
         document.getElementById("btn_submit").onclick = function () {
             g_obj_update_servier.commit()
         }
 
+        // 点击文件 input 
         function click_input_file(dom) {
-            console.log("147");
-
             var obj_file_input = document.getElementById("file_onload")
             if (obj_file_input.style.display !== "none") {
                 event.preventDefault()
@@ -227,31 +241,39 @@
             }
         }
 
+        function open_file_selector() {
+            document.getElementById("upd_file_input").click()
+        }
+
+        // 文件数据变动
         function on_file_chg(dom) {
-            console.log("文件上传");
+            // console.log("文件上传");
             var arr_file = dom.files || event.target.files
             var ui_file_len = arr_file.length
+
             if (ui_file_len) {
+                $('#file_text').html("<div id='file_tree_input_upload'></div>")
                 var obj_menu = new construct_file_menu()
 
                 if (ui_file_len < 2000) {
-                    // obj_menu.set_file(arr_file)
-                    // add_menu_tree(obj_menu.get_data(), true)
-                    // return
+                    obj_menu.set_file(arr_file)
+                    add_menu_tree(obj_menu.get_data(), true, "#file_tree_input_upload")
+                    return
                 }
 
-                // 单词渲染条数
-                var ui_step = 100
+                // 若超过两千条数据则分批次渲染
+                // 单次渲染条数
+                var ui_step = 2000
                 var ui_start_idx = 0
                 var ui_loop_cnt = Math.ceil(ui_file_len / ui_step)
 
-
                 $("#input_file_tilte").css("display", "inline-block")
-
 
                 obj_menu.set_file(arr_file)
                 obj_menu.set_path_name(arr_file)
-                loop_add_menu()
+
+                // loop_add_menu()
+                loop_add_menu_twice()
 
                 function loop_add_menu() {
                     var ui_start = (ui_start_idx) * ui_step
@@ -261,26 +283,30 @@
                     add_menu_tree(obj_menu.get_data_slice(ui_start, ui_end), true)
 
                     if (ui_start_idx < ui_loop_cnt) {
-                        // setTimeout(function () {
                         ui_start_idx++
                         loop_add_menu()
-                        // }, 500)
                     } else {
                         $("#input_file_tilte").css("display", "none")
                     }
                 }
 
-                // while (ui_start_idx < ui_loop_cnt) {
-                //     // var ui_start = (ui_start_idx) * ui_step
-                //     // var ui_end = ui_start + ui_step
-                // }
+                // 分两次渲染
+                function loop_add_menu_twice() {
+                    add_menu_tree(obj_menu.get_data_slice(0, ui_step), true, "#file_tree_input_upload")
+                    setTimeout(function () {
+                        add_menu_tree(obj_menu.get_data_slice(ui_step, ui_file_len), true, "#file_tree_input_upload")
+                        setTimeout(() => {
+                            $("#input_file_tilte").css("display", "none")
+                        }, 1000);
+                    }, 500)
 
+                }
             }
         }
 
-        add_menu_tree()
 
-        function add_menu_tree(arr, b_save) {
+        // 渲染目录文件
+        function add_menu_tree(arr, b_save, container_id) {
             clear_file_input(b_save)
             layui.use('tree', function () {
                 var data = arr || []
@@ -289,8 +315,9 @@
                 //渲染
                 var inst1 = tree.render({
                     //绑定元素
-                    elem: '#file_text',
+                    elem: container_id || '#file_text',
                     data: data,
+                    edit: true,
                     text: {
                         none: "暂无文件"
                     }
@@ -306,6 +333,7 @@
                 obj_file_input.outerHTML = obj_file_input.outerHTML
             }
         };
+
 
         // percent === 百分比
         function update_progress(percent) {
@@ -333,10 +361,9 @@
                 })
             } else {
                 $("#file_onload").css({
-                    // "opacity": "0",
                     "display": "none"
                 })
-                // opacity: 0;
+
             }
         }
     </script>
@@ -349,7 +376,7 @@
                 case "module":
                     arr = obj_data_response.module_info.PARAMS
                     g_test_req.moudlue_info(arr, function () {
-                        console.log("添加返回");
+                        // console.log("添加返回");
                     }, true)
                     break;
                 case "version":
@@ -358,14 +385,14 @@
                 case "file":
                     arr = get_file_data()
                     g_test_req.moudlue_info(arr, function () {
-                        console.log("添加返回");
+                        // console.log("添加返回");
                     }, true)
                     break;
                 default:
                     break;
             }
 
-            console.log(arr);
+            // console.log(arr);
         }
 
 
@@ -411,7 +438,7 @@
 
                 },
                 error: function (xhr, textStatus, errorThrown) {
-                    console.log("failed msg : " + xhr.responseText);
+                    // console.log("failed msg : " + xhr.responseText);
                 }
             });
         }

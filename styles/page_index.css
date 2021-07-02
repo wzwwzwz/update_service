@@ -2,13 +2,13 @@
 body {
     font-size: 16px;
     color: #000;
+    background: #eee;
 }
 
 .main_content {
-    padding: 10px 50px;
+    margin: 18px auto;
+    background: #eee;
 }
-
-
 
 .upd_item_grp {
     margin-top: 10px;
@@ -39,7 +39,6 @@ body {
     margin-left: 20px;
 }
 
-
 .upd_btn {
     /* border: 1px solid #999; */
     padding: 0px 5px;
@@ -49,18 +48,16 @@ body {
     display: inline-block;
     box-sizing: border-box;
     background: #409eff;
-    color: wheat;
+    color: white;
 }
-
 
 .upd_btn:hover {
     opacity: 0.8;
 }
 
 .is_submitting .upd_btn {
-    cursor: not-allowed
+    cursor: not-allowed;
 }
-
 
 #upd_version {
     margin-top: 25px;
@@ -70,14 +67,11 @@ body {
     margin-left: 10px;
 }
 
-
 .upd_single_item {
     display: flex;
     /* flex-direction: column; */
     align-items: center;
 }
-
-
 
 #modlue_text {
     height: 110px;
@@ -88,8 +82,6 @@ body {
     border-radius: 0px;
     box-sizing: border-box;
 }
-
-
 
 /* 覆盖标签样式 */
 .item_select,
@@ -108,10 +100,12 @@ textarea {
 }
 
 .form {
-    border: 1px solid;
+    border: 1px solid #cfcfcf;
+    background: #fff;
     width: 480px;
     min-width: 425px;
     margin: 0 auto;
+    box-shadow: inset 0px 0px 10px rgb(255 255 255 / 50%), 0px 0px 15px rgb(75 75 75 / 30%);
 }
 
 .icon-shanglajiantou {
@@ -136,7 +130,6 @@ textarea {
     height: auto;
 }
 
-
 .file_wrap,
 textarea {
     /* max-width: 300px;
@@ -150,7 +143,6 @@ textarea {
     height: 340px;
     overflow: auto;
 }
-
 
 /* 正在提交 */
 .is_submitting {
@@ -206,20 +198,144 @@ textarea {
 
 .commit_text_wrap {
     position: absolute;
+    height: 50px;
+    width: 280px;
     top: 50%;
     left: 50%;
+    padding: 10px;
     text-align: center;
-    width: 100%;
-    color: #ffffff;
-    background: #b1abab;
     font-size: 20px;
     opacity: 1;
-    width: 480px;
-    transform: translate(-50%, 10px);
-    /* display: none; */
+    transform: translate(-50%, -50%);
+    background: #fff;
+    color: #000;
+    border: solid 1px #2b7da578;
+    border-radius: 3px;
+    box-shadow: inset 0px 0px 10px rgb(255 255 255 / 50%), 0px 0px 15px rgb(75 75 75 / 30%);
+}
+
+
+
+#upd_modlue {
+    margin-top: 20px;
+}
+
+/* 等待jindu */
+@keyframes typing {
+    0% {
+        background-color: rgba(255, 0, 0, 1);
+        box-shadow: 12px 0px 0px 0px rgba(255, 0, 0, 0.2),
+            24px 0px 0px 0px rgba(255, 0, 0, 0.2);
+    }
+
+    25% {
+        background-color: rgba(255, 0, 0, 0.4);
+        box-shadow: 12px 0px 0px 0px rgba(255, 0, 0, 2),
+            24px 0px 0px 0px rgba(255, 0, 0, 0.2);
+    }
+
+    75% {
+        background-color: rgba(255, 0, 0, 0.4);
+        box-shadow: 12px 0px 0px 0px rgba(255, 0, 0, 0.2),
+            24px 0px 0px 0px rgba(255, 0, 0, 1);
+    }
+}
+
+@-webkit-keyframes typing {
+    0% {
+        background-color: rgba(255, 0, 0, 1);
+        box-shadow: 12px 0px 0px 0px rgba(255, 0, 0, 0.2),
+            24px 0px 0px 0px rgba(255, 0, 0, 0.2);
+    }
+
+    25% {
+        background-color: rgba(255, 0, 0, 0.4);
+        box-shadow: 12px 0px 0px 0px rgba(255, 0, 0, 2),
+            24px 0px 0px 0px rgba(255, 0, 0, 0.2);
+    }
+
+    75% {
+        background-color: rgba(255, 0, 0, 0.4);
+        box-shadow: 12px 0px 0px 0px rgba(255, 0, 0, 0.2),
+            24px 0px 0px 0px rgba(255, 0, 0, 1);
+    }
+}
+
+
+.span_load {
+    width: 30px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.typing_loader {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    -webkit-animation: typing 1s linear infinite alternate;
+    -moz-animation: Typing 1s linear infinite alternate;
+    animation: typing 1s linear infinite alternate;
+}
+
+#upd_commit_mask .mc_progress_bar_wrap {
+    width: 280px;
+    margin-top: 10px;
+    display: none;
+}
+
+
+/* 上传按钮 */
+.icon_upload {
+    background-image: URL("../images/upload.png");
+    width: 185px;
+    height: 180px;
+    transform: scale(0.12);
+    background-repeat: no-repeat;
+    position: absolute;
+    display: inline-block;
+    top: -77px;
+    left: -44px;
+}
+
+/* 按钮外层 */
+.icon_wrap{
+    position: relative;
+    background: white;
+    color: inherit;
+    border: 1px solid #409eff;
+    /* padding-right: 50px; */
+    padding: 0px 7px;
+    height: auto;
+    width: auto;
+    padding-right: 34px;
+    
+}
+
+/* 只带边框的按钮 */
+.upd_btn_border {
+    color: #409eff;
+    background: #ecf5ff;
+    border-color: #b3d8ff;
+}
+
+/******************************************* 覆盖layui *******************************************/
+#file_tree_input_upload .layui-btn-group [data-type="update"]{
+    display: none;
+}
+
+#file_tree_input_upload .layui-btn-group {
+    display: inline-block;
+}
+
+.layui-btn-group {
+    display: none;
 }
 
 .layui-tree-txt {
     color: #333;
     font-size: 14px;
+}
+
+.layui-icon-file {
+    color: #333;
 }
