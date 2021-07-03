@@ -57,7 +57,7 @@
       <input class="cmz-input" placeholder="请选择" type="text" />
 
       <!-- 下箭头icon -->
-      <span class="iconfont icon-shanglajiantou inputImg arrowIcon"></span>
+      <span class="iconfont icon_updown inputImg arrowIcon"></span>
 
       <ul class="list"></ul>
       <ul class="listT">

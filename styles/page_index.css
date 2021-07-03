@@ -108,7 +108,7 @@ textarea {
     box-shadow: inset 0px 0px 10px rgb(255 255 255 / 50%), 0px 0px 15px rgb(75 75 75 / 30%);
 }
 
-.icon-shanglajiantou {
+.icon_updown {
     background-image: URL("../images/icon_up_down.png");
     width: 10px;
     height: 10px;
@@ -319,18 +319,6 @@ textarea {
 }
 
 /******************************************* 覆盖layui *******************************************/
-#file_tree_input_upload .layui-btn-group [data-type="update"]{
-    display: none;
-}
-
-#file_tree_input_upload .layui-btn-group {
-    display: inline-block;
-}
-
-.layui-btn-group {
-    display: none;
-}
-
 .layui-tree-txt {
     color: #333;
     font-size: 14px;
